@@ -1,10 +1,5 @@
 import os
-import sys
 from config import config as c
-
-c.dataset_dir
-c.training_dir
-c.test_dir
 
 
 def _clear_dir(directory):
