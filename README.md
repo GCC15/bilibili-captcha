@@ -5,7 +5,7 @@ The Python program attempts to recognize [CAPTCHA images](http://www.bilibili.co
 [A low-cost attack on a Microsoft captcha](http://dx.doi.org/10.1145/1455770.1455839)  
 [A Study on Captcha Recognition](http://dx.doi.org/10.1109/IIH-MSP.2014.105)  
 [Breaking Visual CAPTCHAs with Naive Pattern Recognition Algorithms](http://dx.doi.org/10.1109/ACSAC.2007.47)  
-[Decoding CAPTCHA¡¯s](http://www.boyter.org/decoding-captchas/)  
+[Decoding CAPTCHA's](http://www.boyter.org/decoding-captchas/)  
 [How To Crack Captchas](http://www.andrewt.net/blog/posts/how-to-crack-captchas/)  
 [Image manipulation and processing using Numpy and Scipy](http://scipy-lectures.github.io/advanced/image_processing/)  
 [Mathematical morphology](https://en.wikipedia.org/wiki/Mathematical_morphology)  
