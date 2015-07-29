@@ -21,5 +21,6 @@ class CaptchaSource:
         plt.hist(rgb_to_hsv(img)[:, :, 0].flatten(), bins=256, range=(0, 1))
         plt.show()
 
+
 if __name__ == '__main__':
     captcha_source = CaptchaSource()
