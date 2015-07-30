@@ -1,28 +1,32 @@
+# A source from which we fetch captcha images
+
 import requests
 from io import BytesIO
-from numpy import *
-from scipy import ndimage
-from matplotlib.colors import rgb_to_hsv
-import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 
+captcha_length = 5
+#       'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+chars = '    EFGH JKLMN PQR TUVWXY  123456 89'.replace(' ', '')
 
-def get_captcha_url(use_https=False):
+
+def _get_captcha_url(use_https=False):
     return ('http' if use_https else 'https') + '://www.bilibili.com/captcha'
 
 
-class CaptchaSource:
-    def __init__(self, use_https=False):
-        r = requests.get(get_captcha_url(use_https))
-        img0 = mpimg.imread(BytesIO(r.content))
-        print(img0.shape)
-        # plt.axis('off')
-        # plt.imshow(img)
-        # plt.show()
-        mpimg.imsave('temp/00.origin.00.png', img0)
-        plt.clf()
-        plt.hist(rgb_to_hsv(img0)[:, :, 0].flatten(), bins=512, range=(0, 1))
-        plt.savefig('temp/00.origin.hue.hist.png')
+def canonicalize(seq):
+    return seq.upper()
 
-if __name__ == '__main__':
-    captcha_source = CaptchaSource(use_https=True)
+
+def fetch_image(use_https=False, retry_limit=3):
+    url = _get_captcha_url(use_https)
+    print('Fetching CAPTCHA image from {}'.format(url))
+    r = None
+    for num_retries in range(retry_limit):
+        if num_retries > 0:
+            print('num_retries = {}'.format(num_retries))
+        try:
+            r = requests.get(url)
+            break
+        except Exception as e:
+            print(e)
+    return None if r is None else mpimg.imread(BytesIO(r.content))
