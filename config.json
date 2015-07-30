@@ -1,6 +1,6 @@
 {
-  "dataset_dir": "dataset",
-  "test_dir": "test",
-  "training_dir": "training",
-  "assets_dir": "assets"
+  "dataset": "dataset",
+  "training": "training",
+  "test": "test",
+  "temp":"temp"
 }

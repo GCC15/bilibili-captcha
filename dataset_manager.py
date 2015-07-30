@@ -9,17 +9,21 @@ def _clear_dir(directory):
         os.remove(os.path.join(directory, filename))
 
 
-def clear_training_set():
+def _fetch_dir():
     pass
+
+
+def clear_training_set():
+    _clear_dir(c.training_set_dir)
 
 
 def clear_test_set():
-    pass
+    _clear_dir(c.test_set_dir)
 
 
 def clear_dataset():
     clear_training_set()
-    clear_dataset()
+    clear_test_set()
 
 
 def fetch_test_set(num):
@@ -31,5 +35,5 @@ def fetch_training_set(num):
 
 
 if __name__ == '__main__':
-    _clear_dir('temp')
+    _clear_dir(c.temp_dir)
     pass

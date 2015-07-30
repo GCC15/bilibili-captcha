@@ -1,5 +1,6 @@
-from PIL import Image
+# from PIL import Image
 
 
 class CaptchaRecognizer:
-    pass
+    def recognize(self, img):
+        pass
