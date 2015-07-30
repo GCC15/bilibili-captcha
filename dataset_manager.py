@@ -1,4 +1,10 @@
+# Manages all dataset
+
 import os
+import requests
+from io import BytesIO
+import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
 from config import config as c
 
 
@@ -9,7 +15,7 @@ def _clear_dir(directory):
         os.remove(os.path.join(directory, filename))
 
 
-def _fetch_dir():
+def _fetch_dir(directory):
     pass
 
 
@@ -26,12 +32,12 @@ def clear_dataset():
     clear_test_set()
 
 
-def fetch_test_set(num):
-    pass
-
-
 def fetch_training_set(num):
-    pass
+    _fetch_dir(c.training_set_dir)
+
+
+def fetch_test_set(num):
+    _fetch_dir(c.test_set_dir)
 
 
 if __name__ == '__main__':

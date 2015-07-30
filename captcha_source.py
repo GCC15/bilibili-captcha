@@ -25,4 +25,4 @@ class CaptchaSource:
         plt.savefig('temp/00.origin.hue.hist.png')
 
 if __name__ == '__main__':
-    captcha_source = CaptchaSource(True)
+    captcha_source = CaptchaSource(use_https=True)
