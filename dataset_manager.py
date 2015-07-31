@@ -56,12 +56,15 @@ def fetch_test_set(num=1, use_https=False):
     _fetch_dir(c.test_set_dir, num)
 
 
-# TODO: There is bug in this function!
 def get_training_images(num=1):
     images = []
-    filenames = os.listdir(c.training_set_dir)
+    filenames = os.listdir(c.training_set_dir)[1:]
+    if num > len(filenames):
+        num = len(filenames)
+        print('Requesting more training images than stored,returning all available images')
     for i in range(num):
-        images.append(plt.imread(os.path.join(c.training_set_dir, filenames[i])))
+        image = open(os.path.join(c.training_set_dir, filenames[i]),"rb")
+        images.append(Image.open(image))
     return images
 
 if __name__ == '__main__':
