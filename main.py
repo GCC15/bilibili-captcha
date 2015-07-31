@@ -6,13 +6,13 @@ import captcha_source
 
 
 def main():
-    # test_fetch_training_set()
-    test_captcha_recognizing()
+    test_fetch_training_set()
+    # test_captcha_recognizing()
 
 
 def test_fetch_training_set():
     # dataset_manager.clear_training_set()
-    dataset_manager.fetch_training_set(5)
+    dataset_manager.fetch_training_set(50)
 
 
 def test_captcha_recognizing():
