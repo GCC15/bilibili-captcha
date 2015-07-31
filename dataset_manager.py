@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import captcha_source
 from config import config as c
-
+from PIL import Image
 
 def _clear_dir(directory):
     filenames = os.listdir(directory)
@@ -55,6 +55,17 @@ def fetch_training_set(num=1, use_https=False):
 def fetch_test_set(num=1, use_https=False):
     _fetch_dir(c.test_set_dir, num)
 
+
+# TODO: There is bug in this function!
+def fetch_img_from_training_dir(num=1):
+    image_list = []
+    filenames = os.listdir(c.training_set_dir)[1:]
+    for i in range(num):
+        dir = os.path.join(c.training_set_dir, filenames[i])
+        file = open(dir,"r")
+        image = plt.imread(file)
+        image_list.append(image)
+    return image_list
 
 if __name__ == '__main__':
     _clear_dir(c.temp_dir)

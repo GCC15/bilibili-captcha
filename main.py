@@ -11,12 +11,13 @@ def main():
 
 
 def test_fetch_training_set():
-    dataset_manager.clear_training_set()
+    # dataset_manager.clear_training_set()
     dataset_manager.fetch_training_set(5)
 
 
 def test_captcha_recognizing():
     image = captcha_source.fetch_image()
+    # image = dataset_manager.fetch_img_from_training_dir(1) # TODO Bug in this function!
     CaptchaRecognizer().recognize(image)
 
 
