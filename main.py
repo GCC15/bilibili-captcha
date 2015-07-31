@@ -6,8 +6,8 @@ import captcha_source
 
 
 def main():
-    test_fetch_training_set()
-    # test_captcha_recognizing()
+    # test_fetch_training_set()
+    test_captcha_recognizing()
 
 
 def test_fetch_training_set():
@@ -16,8 +16,8 @@ def test_fetch_training_set():
 
 
 def test_captcha_recognizing():
-    image = captcha_source.fetch_image()
-    # image = dataset_manager.fetch_img_from_training_dir(1) # TODO Bug in this function!
+    # image = captcha_source.fetch_image()
+    image = dataset_manager.get_training_images(1)[0]
     CaptchaRecognizer().recognize(image)
 
 

@@ -57,15 +57,12 @@ def fetch_test_set(num=1, use_https=False):
 
 
 # TODO: There is bug in this function!
-def fetch_img_from_training_dir(num=1):
-    image_list = []
-    filenames = os.listdir(c.training_set_dir)[1:]
+def get_training_images(num=1):
+    images = []
+    filenames = os.listdir(c.training_set_dir)
     for i in range(num):
-        dir = os.path.join(c.training_set_dir, filenames[i])
-        file = open(dir,"r")
-        image = plt.imread(file)
-        image_list.append(image)
-    return image_list
+        images.append(plt.imread(os.path.join(c.training_set_dir, filenames[i])))
+    return images
 
 if __name__ == '__main__':
     _clear_dir(c.temp_dir)
