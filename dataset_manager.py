@@ -7,6 +7,7 @@ import captcha_source
 from config import config as c
 from PIL import Image
 
+
 def _clear_dir(directory):
     filenames = os.listdir(directory)
     print('Removing {} files...'.format(len(filenames)))
@@ -63,7 +64,7 @@ def get_training_images(num=1):
         num = len(filenames)
         print('Requesting more training images than stored,returning all available images')
     for i in range(num):
-        image = open(os.path.join(c.training_set_dir, filenames[i]),"rb")
+        image = open(os.path.join(c.training_set_dir, filenames[i]), "rb")
         images.append(Image.open(image))
     return images
 
