@@ -22,6 +22,7 @@ class CaptchaRecognizer:
 
     def remove_noise(self, img):
         img_rgb = img.convert('RGB')
+        img_hsv = img.convert('HSV')
         img = img.convert('P')
         length = img.size[0]
         width = img.size[1]
@@ -31,15 +32,23 @@ class CaptchaRecognizer:
         stand_r = 0
         stand_g = 0
         stand_b = 0
+        stand_h = 0
+        stand_s = 0
+        stand_v = 0
         for x in range(length):
             for y in range(width):
                 if img.getpixel((x, y)) == sort_index[1]:
                     stand_r, stand_g, stand_b = img_rgb.getpixel((x, y))
+                    stand_h, stand_s, stand_v = img_hsv.getpixel((x, y))
                     break
         for x in range(length):
             for y in range(width):
                 r, g, b = img_rgb.getpixel((x, y))
-                if abs(r - stand_r) <= 3 and abs(g - stand_g) <= 3 and abs(b - stand_b) <= 3:
+                h, s, v = img_hsv.getpixel((x, y))
+                """
+                if abs(r - stand_r) <= 40 and abs(g - stand_g) <= 40 and abs(b - stand_b) <= 40:
                     new_img.putpixel((x, y), 0)
-
+                """
+                if abs(h - stand_h) <=5:
+                    new_img.putpixel((x, y), 0)
         return new_img
