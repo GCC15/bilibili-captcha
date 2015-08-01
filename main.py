@@ -17,7 +17,10 @@ def test_fetch_training_set():
 
 def test_captcha_recognizing():
     # image = captcha_source.fetch_image()
-    image = dataset_manager.get_training_images(1)[0]
+    # image = dataset_manager.get_training_images(1)[0]
+    # image = dataset_manager.get_training_image('J11L2')
+    # image = dataset_manager.get_training_image('EQEJU')
+    image = dataset_manager.get_training_image('QN4EL')
     CaptchaRecognizer().recognize(image)
 
 

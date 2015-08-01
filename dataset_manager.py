@@ -77,7 +77,7 @@ def _get_images(directory, num=1):
 
 
 def get_test_image(seq):
-    return _get_image(c.test_set_dir, seq)
+    return _get_image(c.test_set_dir, '{}.png'.format(seq))
 
 
 def get_test_images(num=1):
@@ -85,7 +85,7 @@ def get_test_images(num=1):
 
 
 def get_training_image(seq):
-    return _get_image(c.training_set_dir, seq)
+    return _get_image(c.training_set_dir, '{}.png'.format(seq))
 
 
 def get_training_images(num=1):

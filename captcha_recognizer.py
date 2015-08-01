@@ -19,7 +19,7 @@ def show_image(img):
 
 class CaptchaRecognizer:
     def __init__(self):
-        self.hue_tolerance = 0.02
+        self.hue_tolerance = 0.012
         self.neighbor_low = 1
         self.neighbor_high = 5
         self.sep_constant = 0.016
