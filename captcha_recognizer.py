@@ -13,6 +13,7 @@ class CaptchaRecognizer:
         # print(img.shape)
         # plt.imshow(img)
         # plt.show()
+        # img = img.convert("RGB")
         # plt.hist(colors.rgb_to_hsv(img)[:, :, 0].flatten(), bins=512, range=(0, 1))
         img.show()
         new_img = self.remove_noise(img)
