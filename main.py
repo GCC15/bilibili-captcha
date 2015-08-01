@@ -6,8 +6,8 @@ import captcha_source
 
 
 def main():
-    # test_fetch_training_set()
-    test_captcha_recognizing()
+    test_fetch_training_set()
+    # test_captcha_recognizing()
 
 
 def test_fetch_training_set():
