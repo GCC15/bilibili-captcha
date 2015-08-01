@@ -12,6 +12,7 @@ class CaptchaRecognizer:
         self.hue_tolerance = 5
         self.neighbor_low = 1
         self.neighbor_high = 5
+        self.sep_constant = 0.016
 
     def recognize(self, img):
         # plt.clf()
@@ -26,6 +27,8 @@ class CaptchaRecognizer:
         img_hue.save(c.temp_path('01.hue.png'))
         img_neighbor = self.remove_noise_with_neighbors(img_hue)
         img_neighbor.save(c.temp_path('02.neighbor.png'))
+        img_neighbor.show()
+        self.find_vertical_sepration_line(img_neighbor)
 
     def remove_noise_with_hue(self, img):
         # img_rgb = img.convert('RGB')
@@ -81,3 +84,22 @@ class CaptchaRecognizer:
                     if num_neighbors >= self.neighbor_high:
                         new_img.putpixel((x, y), self.color_1)
         return new_img
+
+    def find_vertical_sepration_line(self,img):
+        sep_line_list = []
+        new_img = img.copy()
+        length, width = img.size
+        for i in range(length):
+            background_color_num = 0
+            for j in range(width):
+                if img.getpixel((i,j)) != self.color_0:
+                    background_color_num += 1
+            if background_color_num/(width*1.0) < self.sep_constant:
+                sep_line_list.append(i)
+                for j in range(width):
+                    new_img.putpixel((i,j),150)
+        new_img.show()
+        return sep_line_list
+
+
+
