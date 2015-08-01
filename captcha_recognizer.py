@@ -1,13 +1,18 @@
 from PIL import Image
-import matplotlib.pyplot as plt
-import matplotlib.colors as colors
+# import matplotlib.pyplot as plt
+# import matplotlib.colors as colors
 import numpy as np
-
-
-# TODO
+import config as c
 
 
 class CaptchaRecognizer:
+    def __init__(self):
+        self.color_0 = 255
+        self.color_1 = 0
+        self.hue_tolerance = 5
+        self.neighbor_low = 1
+        self.neighbor_high = 5
+
     def recognize(self, img):
         # plt.clf()
         # print(img.shape)
@@ -15,40 +20,64 @@ class CaptchaRecognizer:
         # plt.show()
         # img = img.convert("RGB")
         # plt.hist(colors.rgb_to_hsv(img)[:, :, 0].flatten(), bins=512, range=(0, 1))
-        img.show()
-        new_img = self.remove_noise(img)
-        new_img.show()
-        plt.savefig('temp/00.origin.hue.hist.png')
+        # plt.savefig('temp/00.origin.hue.hist.png')
+        img.save(c.temp_path('00.origin.png'))
+        img_hue = self.remove_noise_with_hue(img)
+        img_hue.save(c.temp_path('01.hue.png'))
+        img_neighbor = self.remove_noise_with_neighbors(img_hue)
+        img_neighbor.save(c.temp_path('02.neighbor.png'))
 
-    def remove_noise(self, img):
-        img_rgb = img.convert('RGB')
+    def remove_noise_with_hue(self, img):
+        # img_rgb = img.convert('RGB')
         img_hsv = img.convert('HSV')
         img = img.convert('P')
-        length = img.size[0]
-        width = img.size[1]
-        new_img = Image.new('P', (length, width), 255)
+        length, width = img.size
+        new_img = Image.new('P', img.size, self.color_0)
         hist = img.histogram()
         sort_index = np.argsort(np.array(hist))[::-1]
-        stand_r = 0
-        stand_g = 0
-        stand_b = 0
-        stand_h = 0
-        stand_s = 0
-        stand_v = 0
+        # stand_r = 0
+        # stand_g = 0
+        # stand_b = 0
+        std_h = 0
+        std_s = 0
+        std_v = 0
         for x in range(length):
             for y in range(width):
                 if img.getpixel((x, y)) == sort_index[1]:
-                    stand_r, stand_g, stand_b = img_rgb.getpixel((x, y))
-                    stand_h, stand_s, stand_v = img_hsv.getpixel((x, y))
+                    # stand_r, stand_g, stand_b = img_rgb.getpixel((x, y))
+                    std_h, std_s, std_v = img_hsv.getpixel((x, y))
                     break
         for x in range(length):
             for y in range(width):
-                r, g, b = img_rgb.getpixel((x, y))
+                # r, g, b = img_rgb.getpixel((x, y))
                 h, s, v = img_hsv.getpixel((x, y))
                 """
                 if abs(r - stand_r) <= 40 and abs(g - stand_g) <= 40 and abs(b - stand_b) <= 40:
                     new_img.putpixel((x, y), 0)
                 """
-                if abs(h - stand_h) <=5:
-                    new_img.putpixel((x, y), 0)
+                if abs(h - std_h) <= self.hue_tolerance:
+                    new_img.putpixel((x, y), self.color_1)
+        return new_img
+
+    def remove_noise_with_neighbors(self, img):
+        length, width = img.size
+        new_img = img.copy()
+        for x in range(length):
+            for y in range(width):
+                num_neighbors = 0
+                for dx in [-1, 0, 1]:
+                    x_neighbor = x + dx
+                    if x_neighbor < 0 or x_neighbor >= length: continue
+                    for dy in [-1, 0, 1]:
+                        if dx == 0 and dy == 0: continue
+                        y_neighbor = y + dy
+                        if y_neighbor < 0 or y_neighbor >= width: continue
+                        if img.getpixel((x_neighbor, y_neighbor)) == self.color_1:
+                            num_neighbors += 1
+                if img.getpixel((x, y)) == self.color_1:
+                    if num_neighbors <= self.neighbor_low:
+                        new_img.putpixel((x, y), self.color_0)
+                else:
+                    if num_neighbors >= self.neighbor_high:
+                        new_img.putpixel((x, y), self.color_1)
         return new_img

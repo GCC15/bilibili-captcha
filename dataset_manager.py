@@ -1,10 +1,11 @@
 # Manages all dataset
 
 import os
+import random
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import captcha_source
-from config import config as c
+import config as c
 from PIL import Image
 
 
@@ -57,20 +58,34 @@ def fetch_test_set(num=1, use_https=False):
     _fetch_dir(c.test_set_dir, num)
 
 
+def _get_image(directory, filename):
+    image = open(os.path.join(directory, filename), "rb")
+    return Image.open(image)
+
+
 def _get_images(directory, num=1):
     images = []
     filenames = _list_png(directory)
     if num > len(filenames):
         num = len(filenames)
         print('Requesting more images than stored, returning all available images')
+    else:
+        random.shuffle(filenames)
     for i in range(num):
-        image = open(os.path.join(directory, filenames[i]), "rb")
-        images.append(Image.open(image))
+        images.append(_get_image(directory, filenames[i]))
     return images
+
+
+def get_test_image(seq):
+    return _get_image(c.test_set_dir, seq)
 
 
 def get_test_images(num=1):
     return _get_images(c.test_set_dir, num)
+
+
+def get_training_image(seq):
+    return _get_image(c.training_set_dir, seq)
 
 
 def get_training_images(num=1):
@@ -87,5 +102,4 @@ def _list_png(directory):
 
 
 if __name__ == '__main__':
-    _clear_dir(c.temp_dir)
     pass
