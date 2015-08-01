@@ -16,7 +16,8 @@ def _fetch_dir(directory, num=1, use_https=False):
         plt.clf()
         plt.axis('off')
         plt.imshow(img)
-        # http://stackoverflow.com/questions/12670101/matplotlib-ion-function-fails-to-be-interactive
+        # http://stackoverflow.com/questions/12670101/matplotlib-ion-function
+        # -fails-to-be-interactive
         # https://github.com/matplotlib/matplotlib/issues/1646/
         plt.show()
         plt.pause(1e-2)
@@ -60,7 +61,9 @@ def _get_images(directory, num=1):
     filenames = _list_png(directory)
     if num > len(filenames):
         num = len(filenames)
-        print('Requesting more images than stored, returning all available images')
+        print(
+            'Requesting more images than stored, returning all available '
+            'images')
     else:
         random.shuffle(filenames)
     for i in range(num):

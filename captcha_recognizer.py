@@ -12,7 +12,8 @@ def _chebyshev_neighbors(r=1):
     neighbors = []
     for dy in d:
         for dx in d:
-            if dy == 0 and dx == 0: continue
+            if dy == 0 and dx == 0:
+                continue
             neighbors.append((dy, dx))
     return neighbors
 
@@ -23,7 +24,8 @@ def _manhattan_neighbors(r=1):
     for dy in range(-r, r + 1):
         xx = r - abs(dy)
         for dx in range(-xx, xx + 1):
-            if dy == 0 and dx == 0: continue
+            if dy == 0 and dx == 0:
+                continue
             neighbors.append((dy, dx))
     return neighbors
 
@@ -77,7 +79,7 @@ class CaptchaRecognizer:
         self.character_num = 5
 
     def recognize(self, img):
-        width, length, _= img.shape
+        width, length, _ = img.shape
         mpimg.imsave(c.temp_path('00.origin.png'), img)
 
         # 1
@@ -85,17 +87,25 @@ class CaptchaRecognizer:
         mpimg.imsave(c.temp_path('01.hsv.png'), img_01, cmap=_cm)
 
         # 2
-        img_02 = self.remove_noise_with_neighbors(img_01, _chebyshev_neighbors(1), 1, 5)
+        img_02 = self.remove_noise_with_neighbors(img_01,
+                                                  _chebyshev_neighbors(1), 1, 5)
         mpimg.imsave(c.temp_path('02.neighbor.che.1.1.5.png'), img_02, cmap=_cm)
 
-        img_02 = self.remove_noise_with_neighbors(img_01, _chebyshev_neighbors(1), 1, 6)
+        img_02 = self.remove_noise_with_neighbors(img_01,
+                                                  _chebyshev_neighbors(1), 1, 6)
         mpimg.imsave(c.temp_path('02.neighbor.che.1.1.6.png'), img_02, cmap=_cm)
 
-        img_02 = self.remove_noise_with_neighbors(img_01, _chebyshev_neighbors(2), 3, 14)
-        mpimg.imsave(c.temp_path('02.neighbor.che.2.3.14.png'), img_02, cmap=_cm)
+        img_02 = self.remove_noise_with_neighbors(img_01,
+                                                  _chebyshev_neighbors(2), 3,
+                                                  14)
+        mpimg.imsave(c.temp_path('02.neighbor.che.2.3.14.png'), img_02,
+                     cmap=_cm)
 
-        img_02 = self.remove_noise_with_neighbors(img_01, _manhattan_neighbors(2), 2, 10)
-        mpimg.imsave(c.temp_path('02.neighbor.man.2.2.10.png'), img_02, cmap=_cm)
+        img_02 = self.remove_noise_with_neighbors(img_01,
+                                                  _manhattan_neighbors(2), 2,
+                                                  10)
+        mpimg.imsave(c.temp_path('02.neighbor.man.2.2.10.png'), img_02,
+                     cmap=_cm)
 
         # 3
         img_03 = self.find_vertical_separation_line(img_02)[0]
@@ -103,7 +113,7 @@ class CaptchaRecognizer:
         mpimg.imsave(c.temp_path('03.separate.png'), img_03, cmap=_cm)
 
         # 4
-        self.cut_images(img_02,cut_line)
+        self.cut_images(img_02, cut_line)
         return
 
     def remove_noise_with_hsv(self, img):
@@ -121,12 +131,13 @@ class CaptchaRecognizer:
             for x in range(X):
                 h, s, v = img_hsv[y, x, :]
                 if abs(h - std_h) <= self.h_tolerance and \
-                                abs(s - std_s) <= self.s_tolerance and \
-                                abs(v - std_v) <= self.v_tolerance:
+                        abs(s - std_s) <= self.s_tolerance and \
+                        abs(v - std_v) <= self.v_tolerance:
                     new_img[y, x] = 1
         return new_img
 
-    def remove_noise_with_neighbors(self, img, neighbors, neighbor_low, neighbor_high):
+    def remove_noise_with_neighbors(self, img, neighbors, neighbor_low,
+                                    neighbor_high):
         Y, X = img.shape
         new_img = img.copy()
         for y in range(Y):
@@ -134,9 +145,11 @@ class CaptchaRecognizer:
                 num_neighbors = 0
                 for dy, dx in neighbors:
                     y_neighbor = y + dy
-                    if y_neighbor < 0 or y_neighbor >= Y: continue
+                    if y_neighbor < 0 or y_neighbor >= Y:
+                        continue
                     x_neighbor = x + dx
-                    if x_neighbor < 0 or x_neighbor >= X: continue
+                    if x_neighbor < 0 or x_neighbor >= X:
+                        continue
                     if img[y_neighbor, x_neighbor]:
                         num_neighbors += 1
                 if img[y, x]:
@@ -157,27 +170,35 @@ class CaptchaRecognizer:
                 sep_line_list.append(x)
                 new_img[:, x] = 0.5
         for i in range(len(sep_line_list)):
-            if i == 0 or sep_line_list[i]==(X-1) or sep_line_list[i] - sep_line_list[i-1] != 1:
-                if i != 0 and sep_line_list[i]!=(X-1):
-                    sep_line_list_final.append(sep_line_list[i-1])
+            if i == 0 or sep_line_list[i] == (X - 1) or sep_line_list[i] - \
+                    sep_line_list[i - 1] != 1:
+                if i != 0 and sep_line_list[i] != (X - 1):
+                    sep_line_list_final.append(sep_line_list[i - 1])
                 sep_line_list_final.append(sep_line_list[i])
-        return [new_img,sep_line_list_final]
+        return [new_img, sep_line_list_final]
 
-    def cut_images(self,img, cut_line):
+    def cut_images(self, img, cut_line):
         cut_image_list = []
         print(cut_line)
-        if len(cut_line) > 2*(self.character_num + 1):
-            print ("Abnormal, the image will be cut into more than 5 pieces")
+        if len(cut_line) > 2 * (self.character_num + 1):
+            print("Abnormal, the image will be cut into more than 5 pieces")
         if cut_line[0] == 0:
-            for i in range(int(len(cut_line)/2)-1):
-                cut_image_list.append(img[:,cut_line[2*i+1]:cut_line[2*i+2]])
-                mpimg.imsave(c.temp_path('cut{0}.png'.format(i+1)),img[:, cut_line[2*i+1]:cut_line[2*i+2]],cmap=_cm)
+            for i in range(int(len(cut_line) / 2) - 1):
+                cut_image_list.append(
+                    img[:, cut_line[2 * i + 1]:cut_line[2 * i + 2]])
+                mpimg.imsave(c.temp_path('cut{0}.png'.format(i + 1)),
+                             img[:, cut_line[2 * i + 1]:cut_line[2 * i + 2]],
+                             cmap=_cm)
         else:
-            for i in range(int(len(cut_line)/2)):
+            for i in range(int(len(cut_line) / 2)):
                 if i == 0:
                     cut_image_list.append(img[:0:cut_line[0]])
-                    mpimg.imsave(c.temp_path('cut{0}.png'.format(i+1)),img[:,0:cut_line[0]],cmap=_cm)
+                    mpimg.imsave(c.temp_path('04.cut{0}.png'.format(i + 1)),
+                                 img[:, 0:cut_line[0]], cmap=_cm)
                 else:
-                    cut_image_list.append(img[:,cut_line[2*i-1]:cut_line[2*i]])
-                    mpimg.imsave(c.temp_path('cut{0}.png'.format(i+1)),img[:, cut_line[2*i-1]:cut_line[2*i]],cmap=_cm)
+                    cut_image_list.append(
+                        img[:, cut_line[2 * i - 1]:cut_line[2 * i]])
+                    mpimg.imsave(c.temp_path('04.cut{0}.png'.format(i + 1)),
+                                 img[:, cut_line[2 * i - 1]:cut_line[2 * i]],
+                                 cmap=_cm)
         return cut_image_list
