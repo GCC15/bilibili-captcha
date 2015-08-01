@@ -57,16 +57,24 @@ def fetch_test_set(num=1, use_https=False):
     _fetch_dir(c.test_set_dir, num)
 
 
-def get_training_images(num=1):
+def _get_images(directory, num=1):
     images = []
-    filenames = _list_png(c.training_set_dir)
+    filenames = _list_png(directory)
     if num > len(filenames):
         num = len(filenames)
-        print('Requesting more training images than stored, returning all available images')
+        print('Requesting more images than stored, returning all available images')
     for i in range(num):
-        image = open(os.path.join(c.training_set_dir, filenames[i]), "rb")
+        image = open(os.path.join(directory, filenames[i]), "rb")
         images.append(Image.open(image))
     return images
+
+
+def get_test_images(num=1):
+    return _get_images(c.test_set_dir, num)
+
+
+def get_training_images(num=1):
+    return _get_images(c.training_set_dir, num)
 
 
 # List all png files in a directory
