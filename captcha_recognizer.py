@@ -21,11 +21,12 @@ def _chebyshev_neighbors(r=1):
 def _manhattan_neighbors(r=1):
     neighbors = []
     for dy in range(-r, r + 1):
-        xx = 2 - abs(dy)
+        xx = r - abs(dy)
         for dx in range(-xx, xx + 1):
             if dy == 0 and dx == 0: continue
             neighbors.append((dy, dx))
     return neighbors
+
 
 # E.g. _sort_by_occurrence(np.array([1, 3, 3, 1, 2, 2, 2, 3, 4, 2]))
 # Return: array([2, 3, 1, 4])
@@ -73,8 +74,10 @@ class CaptchaRecognizer:
         self.neighbor_low = 0
         self.neighbor_high = 5
         self.sep_constant = 0.016
+        self.character_num = 5
 
     def recognize(self, img):
+        width, length, _= img.shape
         mpimg.imsave(c.temp_path('00.origin.png'), img)
 
         # 1
@@ -95,9 +98,12 @@ class CaptchaRecognizer:
         mpimg.imsave(c.temp_path('02.neighbor.man.2.2.10.png'), img_02, cmap=_cm)
 
         # 3
-        img_03 = self.find_vertical_separation_line(img_02)
+        img_03 = self.find_vertical_separation_line(img_02)[0]
+        cut_line = self.find_vertical_separation_line(img_02)[1]
         mpimg.imsave(c.temp_path('03.separate.png'), img_03, cmap=_cm)
 
+        # 4
+        self.cut_images(img_02,cut_line)
         return
 
     def remove_noise_with_hsv(self, img):
@@ -143,10 +149,35 @@ class CaptchaRecognizer:
 
     def find_vertical_separation_line(self, img):
         sep_line_list = []
+        sep_line_list_final = []
         new_img = img.copy()
         Y, X = img.shape
         for x in range(X):
             if np.count_nonzero(img[:, x]) / Y < self.sep_constant:
                 sep_line_list.append(x)
                 new_img[:, x] = 0.5
-        return new_img
+        for i in range(len(sep_line_list)):
+            if i == 0 or sep_line_list[i]==(X-1) or sep_line_list[i] - sep_line_list[i-1] != 1:
+                if i != 0 and sep_line_list[i]!=(X-1):
+                    sep_line_list_final.append(sep_line_list[i-1])
+                sep_line_list_final.append(sep_line_list[i])
+        return [new_img,sep_line_list_final]
+
+    def cut_images(self,img, cut_line):
+        cut_image_list = []
+        print(cut_line)
+        if len(cut_line) > 2*(self.character_num + 1):
+            print ("Abnormal, the image will be cut into more than 5 pieces")
+        if cut_line[0] == 0:
+            for i in range(int(len(cut_line)/2)-1):
+                cut_image_list.append(img[:,cut_line[2*i+1]:cut_line[2*i+2]])
+                mpimg.imsave(c.temp_path('cut{0}.png'.format(i+1)),img[:, cut_line[2*i+1]:cut_line[2*i+2]],cmap=_cm)
+        else:
+            for i in range(int(len(cut_line)/2)):
+                if i == 0:
+                    cut_image_list.append(img[:0:cut_line[0]])
+                    mpimg.imsave(c.temp_path('cut{0}.png'.format(i+1)),img[:,0:cut_line[0]],cmap=_cm)
+                else:
+                    cut_image_list.append(img[:,cut_line[2*i-1]:cut_line[2*i]])
+                    mpimg.imsave(c.temp_path('cut{0}.png'.format(i+1)),img[:, cut_line[2*i-1]:cut_line[2*i]],cmap=_cm)
+        return cut_image_list
