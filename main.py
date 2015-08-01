@@ -1,5 +1,6 @@
 # Currently for testing
 
+import config as c
 import dataset_manager
 from captcha_recognizer import CaptchaRecognizer
 import captcha_source
@@ -16,6 +17,7 @@ def test_fetch_training_set():
 
 
 def test_captcha_recognizing():
+    c.clear_temp()
     # image = captcha_source.fetch_image()
     image = dataset_manager.get_training_images(1)[0]
     # image = dataset_manager.get_training_image('J11L2')

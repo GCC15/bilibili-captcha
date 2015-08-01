@@ -6,6 +6,21 @@ import numpy as np
 import config as c
 
 
+# https://en.wikipedia.org/wiki/Moore_neighborhood
+def _chebyshev_neighbors(r=1):
+    d = range(-r, r + 1, 1)
+    neighbors = []
+    for dy in d:
+        for dx in d:
+            if dy == 0 and dx == 0: continue
+            neighbors.append((dy, dx))
+    return neighbors
+
+# https://en.wikipedia.org/wiki/Von_Neumann_neighborhood
+def _manhattan_neighbors(r=1):
+    pass
+
+
 # E.g. _sort_by_occurrence(np.array([1, 3, 3, 1, 2, 2, 2, 3, 4, 2]))
 # Return: array([2, 3, 1, 4])
 def _sort_by_occurrence(arr):
@@ -59,8 +74,8 @@ class CaptchaRecognizer:
         img_01 = self.remove_noise_with_hsv(img)
         mpimg.imsave(c.temp_path('01.hsv.png'), img_01, cmap=_cm)
 
-        img_02 = self.remove_noise_with_neighbors(img_01)
-        mpimg.imsave(c.temp_path('02.neighbor.png'), img_02, cmap=_cm)
+        img_02 = self.remove_noise_with_neighbors(img_01, _chebyshev_neighbors(1), 0, 5)
+        mpimg.imsave(c.temp_path('02.neighbor.0.5.png'), img_02, cmap=_cm)
 
         img_03 = self.find_vertical_separation_line(img_02)
         mpimg.imsave(c.temp_path('03.separate.png'), img_03, cmap=_cm)
@@ -85,26 +100,24 @@ class CaptchaRecognizer:
                     new_img[y, x] = 1
         return new_img
 
-    def remove_noise_with_neighbors(self, img):
+    def remove_noise_with_neighbors(self, img, neighbors, neighbor_low, neighbor_high):
         Y, X = img.shape
         new_img = img.copy()
         for y in range(Y):
             for x in range(X):
                 num_neighbors = 0
-                for dy in [-1, 0, 1]:
+                for dy, dx in neighbors:
                     y_neighbor = y + dy
                     if y_neighbor < 0 or y_neighbor >= Y: continue
-                    for dx in [-1, 0, 1]:
-                        if dx == 0 and dy == 0: continue
-                        x_neighbor = x + dx
-                        if x_neighbor < 0 or x_neighbor >= X: continue
-                        if img[y_neighbor, x_neighbor]:
-                            num_neighbors += 1
+                    x_neighbor = x + dx
+                    if x_neighbor < 0 or x_neighbor >= X: continue
+                    if img[y_neighbor, x_neighbor]:
+                        num_neighbors += 1
                 if img[y, x]:
-                    if num_neighbors <= self.neighbor_low:
+                    if num_neighbors <= neighbor_low:
                         new_img[y, x] = 0
                 else:
-                    if num_neighbors >= self.neighbor_high:
+                    if num_neighbors >= neighbor_high:
                         new_img[y, x] = 1
         return new_img
 

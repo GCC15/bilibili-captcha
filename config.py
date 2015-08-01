@@ -1,3 +1,5 @@
+# Configurations and file system related operations
+
 import os
 import json
 
@@ -25,3 +27,14 @@ _make_dirs(temp_dir)
 
 def temp_path(filename):
     return os.path.join(temp_dir, filename)
+
+
+def clear_dir(directory):
+    filenames = os.listdir(directory)
+    print('Removing {} files...'.format(len(filenames)))
+    for filename in filenames:
+        os.remove(os.path.join(directory, filename))
+
+
+def clear_temp():
+    clear_dir(temp_dir)
