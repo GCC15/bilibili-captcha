@@ -70,16 +70,20 @@ def _show_image(img):
 
 class CaptchaRecognizer:
     def __init__(self):
+        self.length = 0
+        self.width = 0
         self.h_tolerance = 5 / 360
         self.s_tolerance = 30 / 100
         self.v_tolerance = 40 / 100
         self.neighbor_low = 0
         self.neighbor_high = 5
-        self.sep_constant = 0.016
+        self.sep_constant = 0.03  # this means all in one column must be white, if set to 0.04, bad for 'QN4EL'
         self.character_num = 5
 
     def recognize(self, img):
         width, length, _ = img.shape
+        self.width = width
+        self.length = length
         mpimg.imsave(c.temp_path('00.origin.png'), img)
 
         # 1
@@ -202,3 +206,26 @@ class CaptchaRecognizer:
                                  img[:, cut_line[2 * i - 1]:cut_line[2 * i]],
                                  cmap=_cm)
         return cut_image_list
+
+    # Requires two images to be of the same size and both black / white
+    def get_degree_of_similarity(self, img1, img2):
+        width1, length1, _ = img1.shape
+        width2, length2, _ = img2.shape
+        if width1 != width2 or length1 != length2:
+            raise ValueError("Two images of different size are compared")
+        point_num = 0
+        for x in range(length1):
+            for y in range(width1):
+                if img1[y, x].all() == img2[y,x].all():
+                    point_num += 1
+        return point_num/(width1*length1*1.0)
+
+    def resize_image_to_standard(self, img):
+        if self.width is None or self.length is None:
+            raise ValueError("Standard size unknown")
+        width, length, _ = img.shape
+        if self.width != width:
+            raise ValueError("The width of the image is not standard")
+        img_resized = img.resize(self.width, round((self.length-10)/5))
+        return img_resized
+
