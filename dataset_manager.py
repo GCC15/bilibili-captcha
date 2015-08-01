@@ -59,8 +59,8 @@ def fetch_test_set(num=1, use_https=False):
 
 
 def _get_image(directory, filename):
-    image = open(os.path.join(directory, filename), "rb")
-    return Image.open(image)
+    image = mpimg.imread(os.path.join(directory, filename))
+    return image[:, :, 0:3]
 
 
 def _get_images(directory, num=1):
