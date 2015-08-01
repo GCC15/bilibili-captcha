@@ -8,7 +8,7 @@ import config as c
 
 # https://en.wikipedia.org/wiki/Moore_neighborhood
 def _chebyshev_neighbors(r=1):
-    d = range(-r, r + 1, 1)
+    d = range(-r, r + 1)
     neighbors = []
     for dy in d:
         for dx in d:
@@ -19,8 +19,13 @@ def _chebyshev_neighbors(r=1):
 
 # https://en.wikipedia.org/wiki/Von_Neumann_neighborhood
 def _manhattan_neighbors(r=1):
-    pass
-
+    neighbors = []
+    for dy in range(-r, r + 1):
+        xx = 2 - abs(dy)
+        for dx in range(-xx, xx + 1):
+            if dy == 0 and dx == 0: continue
+            neighbors.append((dy, dx))
+    return neighbors
 
 # E.g. _sort_by_occurrence(np.array([1, 3, 3, 1, 2, 2, 2, 3, 4, 2]))
 # Return: array([2, 3, 1, 4])
@@ -72,20 +77,28 @@ class CaptchaRecognizer:
     def recognize(self, img):
         mpimg.imsave(c.temp_path('00.origin.png'), img)
 
+        # 1
         img_01 = self.remove_noise_with_hsv(img)
         mpimg.imsave(c.temp_path('01.hsv.png'), img_01, cmap=_cm)
 
+        # 2
         img_02 = self.remove_noise_with_neighbors(img_01, _chebyshev_neighbors(1), 1, 5)
-        mpimg.imsave(c.temp_path('02.neighbor.1.1.5.png'), img_02, cmap=_cm)
+        mpimg.imsave(c.temp_path('02.neighbor.che.1.1.5.png'), img_02, cmap=_cm)
 
         img_02 = self.remove_noise_with_neighbors(img_01, _chebyshev_neighbors(1), 1, 6)
-        mpimg.imsave(c.temp_path('02.neighbor.1.1.6.png'), img_02, cmap=_cm)
+        mpimg.imsave(c.temp_path('02.neighbor.che.1.1.6.png'), img_02, cmap=_cm)
 
         img_02 = self.remove_noise_with_neighbors(img_01, _chebyshev_neighbors(2), 3, 14)
-        mpimg.imsave(c.temp_path('02.neighbor.2.3.14.png'), img_02, cmap=_cm)
+        mpimg.imsave(c.temp_path('02.neighbor.che.2.3.14.png'), img_02, cmap=_cm)
 
+        img_02 = self.remove_noise_with_neighbors(img_01, _manhattan_neighbors(2), 2, 10)
+        mpimg.imsave(c.temp_path('02.neighbor.man.2.2.10.png'), img_02, cmap=_cm)
+
+        # 3
         img_03 = self.find_vertical_separation_line(img_02)
         mpimg.imsave(c.temp_path('03.separate.png'), img_03, cmap=_cm)
+
+        return
 
     def remove_noise_with_hsv(self, img):
         # Use number of occurrences to find the standard h, s, v
