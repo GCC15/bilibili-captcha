@@ -16,6 +16,7 @@ def _chebyshev_neighbors(r=1):
             neighbors.append((dy, dx))
     return neighbors
 
+
 # https://en.wikipedia.org/wiki/Von_Neumann_neighborhood
 def _manhattan_neighbors(r=1):
     pass
@@ -74,8 +75,14 @@ class CaptchaRecognizer:
         img_01 = self.remove_noise_with_hsv(img)
         mpimg.imsave(c.temp_path('01.hsv.png'), img_01, cmap=_cm)
 
-        img_02 = self.remove_noise_with_neighbors(img_01, _chebyshev_neighbors(1), 0, 5)
-        mpimg.imsave(c.temp_path('02.neighbor.0.5.png'), img_02, cmap=_cm)
+        img_02 = self.remove_noise_with_neighbors(img_01, _chebyshev_neighbors(1), 1, 5)
+        mpimg.imsave(c.temp_path('02.neighbor.1.1.5.png'), img_02, cmap=_cm)
+
+        img_02 = self.remove_noise_with_neighbors(img_01, _chebyshev_neighbors(1), 1, 6)
+        mpimg.imsave(c.temp_path('02.neighbor.1.1.6.png'), img_02, cmap=_cm)
+
+        img_02 = self.remove_noise_with_neighbors(img_01, _chebyshev_neighbors(2), 3, 14)
+        mpimg.imsave(c.temp_path('02.neighbor.2.3.14.png'), img_02, cmap=_cm)
 
         img_03 = self.find_vertical_separation_line(img_02)
         mpimg.imsave(c.temp_path('03.separate.png'), img_03, cmap=_cm)
