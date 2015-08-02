@@ -6,28 +6,28 @@ import numpy as np
 import config as c
 
 
-# https://en.wikipedia.org/wiki/Moore_neighborhood
-def _chebyshev_neighbors(r=1):
-    d = range(-r, r + 1)
-    neighbors = []
-    for dy in d:
-        for dx in d:
-            if dy == 0 and dx == 0:
-                continue
-            neighbors.append((dy, dx))
-    return neighbors
-
-
-# https://en.wikipedia.org/wiki/Von_Neumann_neighborhood
-def _manhattan_neighbors(r=1):
-    neighbors = []
-    for dy in range(-r, r + 1):
-        xx = r - abs(dy)
-        for dx in range(-xx, xx + 1):
-            if dy == 0 and dx == 0:
-                continue
-            neighbors.append((dy, dx))
-    return neighbors
+# # https://en.wikipedia.org/wiki/Moore_neighborhood
+# def _chebyshev_neighbors(r=1):
+#     d = range(-r, r + 1)
+#     neighbors = []
+#     for dy in d:
+#         for dx in d:
+#             if dy == 0 and dx == 0:
+#                 continue
+#             neighbors.append((dy, dx))
+#     return neighbors
+#
+#
+# # https://en.wikipedia.org/wiki/Von_Neumann_neighborhood
+# def _manhattan_neighbors(r=1):
+#     neighbors = []
+#     for dy in range(-r, r + 1):
+#         xx = r - abs(dy)
+#         for dx in range(-xx, xx + 1):
+#             if dy == 0 and dx == 0:
+#                 continue
+#             neighbors.append((dy, dx))
+#     return neighbors
 
 
 # E.g. _sort_by_occurrence(np.array([1, 3, 3, 1, 2, 2, 2, 3, 4, 2]))
@@ -46,11 +46,11 @@ def _int_to_rgb(n):
     return colors.hex2color('#{:06x}'.format(n))
 
 
-# Color map for binary images
+# Color map for grayscale images
 _cm = plt.cm.get_cmap('Greys')
 
 
-# Show binary image in matplotlib window
+# Show grayscale image in matplotlib window
 def _show_image(img):
     plt.clf()
     plt.axis('off')
@@ -62,9 +62,9 @@ class CaptchaRecognizer:
     def __init__(self):
         self.length = 0
         self.width = 0
-        self.h_tolerance = 5 / 360
-        self.s_tolerance = 30 / 100
-        self.v_tolerance = 40 / 100
+        self.h_tolerance = 6 / 360
+        self.s_tolerance = 34 / 100
+        self.v_tolerance = 60 / 100
         self.neighbor_low = 0
         self.neighbor_high = 5
         self.sep_constant = 0.03  # this means all in one column must be white, if set to 0.04, bad for 'QN4EL'
@@ -81,25 +81,8 @@ class CaptchaRecognizer:
         mpimg.imsave(c.temp_path('01.hsv.png'), img_01, cmap=_cm)
 
         # 2
-        img_02 = self.remove_noise_with_neighbors(img_01,
-                                                  _chebyshev_neighbors(1), 1, 5)
-        mpimg.imsave(c.temp_path('02.neighbor.che.1.1.5.png'), img_02, cmap=_cm)
-
-        img_02 = self.remove_noise_with_neighbors(img_01,
-                                                  _chebyshev_neighbors(1), 1, 6)
-        mpimg.imsave(c.temp_path('02.neighbor.che.1.1.6.png'), img_02, cmap=_cm)
-
-        img_02 = self.remove_noise_with_neighbors(img_01,
-                                                  _chebyshev_neighbors(2), 3,
-                                                  14)
-        mpimg.imsave(c.temp_path('02.neighbor.che.2.3.14.png'), img_02,
-                     cmap=_cm)
-
-        img_02 = self.remove_noise_with_neighbors(img_01,
-                                                  _manhattan_neighbors(2), 2,
-                                                  10)
-        mpimg.imsave(c.temp_path('02.neighbor.man.2.2.10.png'), img_02,
-                     cmap=_cm)
+        img_02 = self.remove_noise_with_neighbors(img_01)
+        mpimg.imsave(c.temp_path('02.neighbor.png'), img_02, cmap=_cm)
 
         # 3
         img_03 = self.find_vertical_separation_line(img_02)[0]
@@ -108,9 +91,10 @@ class CaptchaRecognizer:
 
         # 4
         image_cut = self.cut_images(img_02, cut_line)
-        print(self.get_degree_of_similarity(image_cut[0],image_cut[1]))
+        print(self.get_degree_of_similarity(image_cut[0], image_cut[1]))
         return
 
+    # Convert to a grayscale image using HSV
     def remove_noise_with_hsv(self, img):
         # Use number of occurrences to find the standard h, s, v
         # Convert to int so we can sort the colors
@@ -125,34 +109,48 @@ class CaptchaRecognizer:
         for y in range(Y):
             for x in range(X):
                 h, s, v = img_hsv[y, x, :]
-                if abs(h - std_h) <= self.h_tolerance and \
-                        abs(s - std_s) <= self.s_tolerance and \
-                        abs(v - std_v) <= self.v_tolerance:
-                    new_img[y, x] = 1
+                if (abs(h - std_h) <= self.h_tolerance and
+                            abs(s - std_s) <= self.s_tolerance and
+                            abs(v - std_v) <= self.v_tolerance):
+                    delta_v = abs(v - std_v)
+                    if delta_v <= 1e-4:
+                        new_img[y, x] = 1
+                    else:
+                        new_img[y, x] = 1 - delta_v
+        # Three types of grayscale colors in new_img:
+        # Type A: 1. Outside noise, or inside point.
+        # Type B: between 0 and 1. Outside noise, or contour point.
+        # Type C: 0. Inside noise, or background.
         return new_img
 
-    def remove_noise_with_neighbors(self, img, neighbors, neighbor_low,
-                                    neighbor_high):
+    def remove_noise_with_neighbors(self, img, neighbor_low=1, neighbor_high=7):
         Y, X = img.shape
         new_img = img.copy()
         for y in range(Y):
             for x in range(X):
                 num_neighbors = 0
-                for dy, dx in neighbors:
-                    y_neighbor = y + dy
-                    if y_neighbor < 0 or y_neighbor >= Y:
-                        continue
-                    x_neighbor = x + dx
-                    if x_neighbor < 0 or x_neighbor >= X:
-                        continue
-                    if img[y_neighbor, x_neighbor]:
-                        num_neighbors += 1
-                if img[y, x]:
+                sum_color = 0
+                for dy in range(-1, 2):
+                    for dx in range(-1, 2):
+                        if dy == 0 and dx == 0:
+                            continue
+                        y_neighbor = y + dy
+                        if y_neighbor < 0 or y_neighbor >= Y:
+                            continue
+                        x_neighbor = x + dx
+                        if x_neighbor < 0 or x_neighbor >= X:
+                            continue
+                        color = img[y_neighbor, x_neighbor]
+                        sum_color += color
+                        if color > 0:
+                            num_neighbors += 1
+                if img[y, x] * 2 >= sum_color:
+                    new_img[y, x] = 0
+                elif img[y, x] > 0:
                     if num_neighbors <= neighbor_low:
                         new_img[y, x] = 0
-                else:
-                    if num_neighbors >= neighbor_high:
-                        new_img[y, x] = 1
+                elif num_neighbors >= neighbor_high:
+                    new_img[y, x] = sum_color / 8
         return new_img
 
     def find_vertical_separation_line(self, img):
@@ -188,7 +186,7 @@ class CaptchaRecognizer:
         else:
             for i in range(int(len(cut_line) / 2)):
                 if i == 0:
-                    cut_image_list.append(img[:,0:cut_line[0]])
+                    cut_image_list.append(img[:, 0:cut_line[0]])
                     mpimg.imsave(c.temp_path('04.cut{0}.png'.format(i + 1)),
                                  img[:, 0:cut_line[0]], cmap=_cm)
                 else:
@@ -210,9 +208,9 @@ class CaptchaRecognizer:
         point_num = 0
         for x in range(length1):
             for y in range(width1):
-                if img1[y, x].all() == img2[y,x].all():
+                if img1[y, x].all() == img2[y, x].all():
                     point_num += 1
-        return point_num/(width1*length1*1.0)
+        return point_num / (width1 * length1 * 1.0)
 
     def resize_image_to_standard(self, img):
         if self.width is None or self.length is None:
@@ -220,6 +218,5 @@ class CaptchaRecognizer:
         width, length = img.shape
         if self.width != width:
             raise ValueError("The width of the image is not standard")
-        img_resized = img.resize((int(self.width), round((self.length-10)/5))) # TODO: bug
+        img_resized = img.resize((int(self.width), round((self.length - 10) / 5)))  # TODO: bug
         return img_resized
-
