@@ -1,4 +1,5 @@
 # from PIL import Image
+import random
 import time
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
@@ -243,6 +244,7 @@ class CaptchaRecognizer:
 
     # https://en.wikipedia.org/wiki/Simulated_annealing
     def anneal(self, img, num_steps=500):
+        np.seterr(divide='ignore', invalid='ignore')
         Y, X = img.shape
         # TODO: User RGB for now, just for visualization
         new_img = np.zeros((Y, X, 3))
@@ -259,7 +261,7 @@ class CaptchaRecognizer:
         print('{} Positions'.format(num_positions))
         particles = np.ones(num_positions, dtype=bool)
         plt.ion()
-        _show_image(new_img)
+        # _show_image(new_img)
         # TODO: Just for testing
         E = 0
         # for p in range(num_positions):
@@ -270,6 +272,7 @@ class CaptchaRecognizer:
             # Choose a position randomly, and invert the state
             p = np.random.randint(num_positions)
             y, x = positions[p]
+            # noinspection PyTypeChecker
             delta_E = np.nansum(
                 _LJ(la.norm(positions[particles] - positions[p], axis=1)))
             if particles[p]:
@@ -277,14 +280,14 @@ class CaptchaRecognizer:
             if delta_E < 0:
                 accept = True
             else:
-                accept = (np.random.rand() < np.exp(-beta * delta_E))
+                accept = (random.random() < np.exp(-beta * delta_E))
             if accept:
                 E += delta_E
                 particles[p] = not particles[p]
                 new_img[y, x, 0] = particles[p]
             if step % 50 == 0:
                 print('Step {}. beta {}. E {}'.format(step, beta, E))
-                _show_image(new_img, title=step)
-                plt.pause(0.1)
+                # _show_image(new_img, title=step)
+                # plt.pause(0.1)
         plt.ioff()
         return new_img
