@@ -33,19 +33,9 @@ def _manhattan_neighbors(r=1):
 # E.g. _sort_by_occurrence(np.array([1, 3, 3, 1, 2, 2, 2, 3, 4, 2]))
 # Return: array([2, 3, 1, 4])
 def _sort_by_occurrence(arr):
-    arr = np.sort(arr)
-    val_list = [-1]
-    occur_list = [0]
-    for val in arr:
-        if val == val_list[-1]:
-            occur_list[-1] += 1
-        else:
-            val_list.append(val)
-            occur_list.append(1)
-    occur_array = np.array(occur_list)
-    sort_index = occur_array.argsort()[:0:-1]
-    val_array = np.array(val_list)
-    return val_array[sort_index]
+    u, counts = np.unique(arr, return_counts=True)
+    sort_index = counts.argsort()[::-1]
+    return u[sort_index]
 
 
 def _rgb_to_int(rgb):
