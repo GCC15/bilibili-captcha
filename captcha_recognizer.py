@@ -9,9 +9,8 @@ import config as c
 
 
 # https://en.wikipedia.org/wiki/Lennard-Jones_potential
-def _LJ(r, delta=3):
-    ret = np.power(delta / r, 12) - 2 * np.power(delta / r, 6)
-    return ret
+def _LJ(r, delta=4):
+    return np.power(delta / r, 12) - 2 * np.power(delta / r, 6)
 
 
 # # https://en.wikipedia.org/wiki/Moore_neighborhood
@@ -257,15 +256,15 @@ class CaptchaRecognizer:
         num_positions = positions.shape[0]
         print('{} Positions'.format(num_positions))
         particles = np.ones(num_positions, dtype=bool)
-        # plt.ion()
-        # _show_image(new_img)
+        plt.ion()
+        _show_image(new_img)
         # TODO: Just for testing
         E = 0
         # for p in range(num_positions):
         #     for q in range(p + 1, num_positions):
         #         E += _LJ(la.norm(positions[q] - positions[p]))
         for step in range(num_steps):
-            beta = 10 + step / 200
+            beta = 10 + step / 50
             # Choose a position randomly, and invert the state
             p = np.random.randint(num_positions)
             y, x = positions[p]
@@ -282,7 +281,7 @@ class CaptchaRecognizer:
                 new_img[y, x, 0] = particles[p]
             if step % 50 == 0:
                 print('Step {}. beta {}. E {}'.format(step, beta, E))
-                # _show_image(new_img, title=step)
-                # plt.pause(0.1)
+                _show_image(new_img, title=step)
+                plt.pause(0.1)
         plt.ioff()
         return new_img
