@@ -117,7 +117,8 @@ class CaptchaRecognizer:
         mpimg.imsave(c.temp_path('03.separate.png'), img_03, cmap=_cm)
 
         # 4
-        self.cut_images(img_02, cut_line)
+        image_cut = self.cut_images(img_02, cut_line)
+        print(self.get_degree_of_similarity(image_cut[0],image_cut[1]))
         return
 
     def remove_noise_with_hsv(self, img):
@@ -183,6 +184,7 @@ class CaptchaRecognizer:
 
     def cut_images(self, img, cut_line):
         cut_image_list = []
+        resized_image_list = []
         print(cut_line)
         if len(cut_line) > 2 * (self.character_num + 1):
             print("Abnormal, the image will be cut into more than 5 pieces")
@@ -196,7 +198,7 @@ class CaptchaRecognizer:
         else:
             for i in range(int(len(cut_line) / 2)):
                 if i == 0:
-                    cut_image_list.append(img[:0:cut_line[0]])
+                    cut_image_list.append(img[:,0:cut_line[0]])
                     mpimg.imsave(c.temp_path('04.cut{0}.png'.format(i + 1)),
                                  img[:, 0:cut_line[0]], cmap=_cm)
                 else:
@@ -205,12 +207,14 @@ class CaptchaRecognizer:
                     mpimg.imsave(c.temp_path('04.cut{0}.png'.format(i + 1)),
                                  img[:, cut_line[2 * i - 1]:cut_line[2 * i]],
                                  cmap=_cm)
-        return cut_image_list
+        for image in cut_image_list:
+            resized_image_list.append(self.resize_image_to_standard(image))
+        return resized_image_list
 
     # Requires two images to be of the same size and both black / white
     def get_degree_of_similarity(self, img1, img2):
-        width1, length1, _ = img1.shape
-        width2, length2, _ = img2.shape
+        width1, length1 = img1.shape
+        width2, length2 = img2.shape
         if width1 != width2 or length1 != length2:
             raise ValueError("Two images of different size are compared")
         point_num = 0
@@ -223,9 +227,9 @@ class CaptchaRecognizer:
     def resize_image_to_standard(self, img):
         if self.width is None or self.length is None:
             raise ValueError("Standard size unknown")
-        width, length, _ = img.shape
+        width, length = img.shape
         if self.width != width:
             raise ValueError("The width of the image is not standard")
-        img_resized = img.resize(self.width, round((self.length-10)/5))
+        img_resized = img.resize((int(self.width), round((self.length-10)/5))) # TODO: bug
         return img_resized
 
