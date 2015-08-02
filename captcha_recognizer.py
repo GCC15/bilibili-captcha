@@ -69,8 +69,8 @@ def _show_image(img, cmap=_cm_greys, title=None):
 
 class CaptchaRecognizer:
     def __init__(self):
-        self.length = 0
-        self.width = 0
+        # self.length = 0
+        # self.width = 0
         self.h_tolerance = 6 / 360
         self.s_tolerance = 34 / 100
         self.v_tolerance = 60 / 100
@@ -82,9 +82,9 @@ class CaptchaRecognizer:
 
     def recognize(self, img):
 
-        width, length, _ = img.shape
-        self.width = width
-        self.length = length
+        # width, length, _ = img.shape
+        # self.width = width
+        # self.length = length
         mpimg.imsave(c.temp_path('00.origin.png'), img)
 
         # 1
@@ -119,11 +119,11 @@ class CaptchaRecognizer:
         std_color = color_array[1]
         std_h, std_s, std_v = colors.rgb_to_hsv(_int_to_rgb(std_color))
         # print(std_h * 360, std_s * 100, std_v * 100)
-        Y, X, _ = img.shape
-        new_img = np.zeros((Y, X))
+        height, width, _ = img.shape
+        new_img = np.zeros((height, width))
         img_hsv = colors.rgb_to_hsv(img)
-        for y in range(Y):
-            for x in range(X):
+        for y in range(height):
+            for x in range(width):
                 h, s, v = img_hsv[y, x, :]
                 if (abs(h - std_h) <= self.h_tolerance and
                         abs(s - std_s) <= self.s_tolerance and
@@ -140,10 +140,10 @@ class CaptchaRecognizer:
         return new_img
 
     def remove_noise_with_neighbors(self, img, neighbor_low=0, neighbor_high=7):
-        Y, X = img.shape
+        height, width = img.shape
         new_img = img.copy()
-        for y in range(Y):
-            for x in range(X):
+        for y in range(height):
+            for x in range(width):
                 num_a = 0
                 num_b = 0
                 sum_color = 0
@@ -152,10 +152,10 @@ class CaptchaRecognizer:
                         if dy == 0 and dx == 0:
                             continue
                         y_neighbor = y + dy
-                        if y_neighbor < 0 or y_neighbor >= Y:
+                        if y_neighbor < 0 or y_neighbor >= height:
                             continue
                         x_neighbor = x + dx
-                        if x_neighbor < 0 or x_neighbor >= X:
+                        if x_neighbor < 0 or x_neighbor >= width:
                             continue
                         color = img[y_neighbor, x_neighbor]
                         sum_color += color
@@ -247,14 +247,14 @@ class CaptchaRecognizer:
     # https://en.wikipedia.org/wiki/Simulated_annealing
     def anneal(self, img, num_steps=500):
         np.seterr(divide='ignore', invalid='ignore')
-        Y, X = img.shape
+        height, width = img.shape
         # TODO: User RGB for now, just for visualization
-        new_img = np.zeros((Y, X, 3))
+        new_img = np.zeros((height, width, 3))
         for i in range(3):
             new_img[:, :, i] = 1 - img.copy()
         positions = []
-        for y in range(Y):
-            for x in range(X):
+        for y in range(height):
+            for x in range(width):
                 if img[y, x] == 1:
                     new_img[y, x, 0] = 1
                     positions.append((y, x))
