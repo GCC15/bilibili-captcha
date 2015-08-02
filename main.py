@@ -5,6 +5,7 @@ import dataset_manager
 from captcha_recognizer import CaptchaRecognizer
 import captcha_source
 
+
 def main():
     # test_fetch_training_set()
     test_captcha_recognizing()

@@ -3,11 +3,12 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 import matplotlib.image as mpimg
 import numpy as np
+import numpy.linalg as la
 import config as c
 
 
 # https://en.wikipedia.org/wiki/Lennard-Jones_potential
-def _LJ(r, delta):
+def _LJ(r, delta=4):
     return np.power(delta / r, 12) - 2 * np.power(delta / r, 6)
 
 
@@ -56,10 +57,11 @@ _cm_greys = plt.cm.get_cmap('Greys')
 
 
 # Show grayscale image in matplotlib window
-def _show_image(img, cmap=_cm_greys):
+def _show_image(img, cmap=_cm_greys, title=None):
     plt.clf()
     plt.axis('off')
     plt.imshow(img, cmap=cmap)
+    plt.title(title)
     plt.show()
 
 
@@ -87,11 +89,14 @@ class CaptchaRecognizer:
 
         # 2
         img_02 = self.remove_noise_with_neighbors(img_01)
+        img_02 = self.remove_noise_with_neighbors(img_02)
         mpimg.imsave(c.temp_path('02.neighbor.png'), img_02, cmap=_cm_greys)
 
-        img_02a = self.mark_ones(img_02)
-        mpimg.imsave(c.temp_path('02a.neighbor.png'), img_02a)
+        img_02a = self.anneal(img_02)
+        mpimg.imsave(c.temp_path('02a.anneal.png'), img_02a)
+
         return
+
         # 3
         img_03, cut_line = self.find_vertical_separation_line(img_02)
         mpimg.imsave(c.temp_path('03.separate.png'), img_03, cmap=_cm_greys)
@@ -130,12 +135,13 @@ class CaptchaRecognizer:
         # Type C: 0. Inside noise, or background.
         return new_img
 
-    def remove_noise_with_neighbors(self, img, neighbor_low=1, neighbor_high=7):
+    def remove_noise_with_neighbors(self, img, neighbor_low=0, neighbor_high=7):
         Y, X = img.shape
         new_img = img.copy()
         for y in range(Y):
             for x in range(X):
-                num_neighbors = 0
+                num_a = 0
+                num_b = 0
                 sum_color = 0
                 for dy in range(-1, 2):
                     for dx in range(-1, 2):
@@ -149,14 +155,16 @@ class CaptchaRecognizer:
                             continue
                         color = img[y_neighbor, x_neighbor]
                         sum_color += color
-                        if color > 0:
-                            num_neighbors += 1
+                        if color == 1:
+                            num_a += 1
+                        elif color > 0:
+                            num_b += 1
                 if img[y, x] * 2 > sum_color:
                     new_img[y, x] = 0
                 elif img[y, x] > 0:
-                    if num_neighbors <= neighbor_low:
+                    if num_a <= neighbor_low:
                         new_img[y, x] = 0
-                elif num_neighbors >= neighbor_high:
+                elif num_a + num_b >= neighbor_high:
                     new_img[y, x] = sum_color / 8
         return new_img
 
@@ -228,14 +236,57 @@ class CaptchaRecognizer:
         img_resized = img.resize((int(self.width), round((self.length - 10) / 5)))  # TODO: bug
         return img_resized
 
-    def mark_ones(self, img):
+    # https://en.wikipedia.org/wiki/Simulated_annealing
+    def anneal(self, img, num_steps=10000):
         Y, X = img.shape
+        # User RGB for now, just for visualization
         new_img = np.zeros((Y, X, 3))
         for i in range(3):
             new_img[:, :, i] = 1 - img.copy()
+        positions = []
         for y in range(Y):
             for x in range(X):
                 if img[y, x] == 1:
                     new_img[y, x, 0] = 1
+                    positions.append((y, x))
+        positions = np.array(positions)
+        num_positions = positions.shape[0]
+        print('{} Positions'.format(num_positions))
+        particles = np.ones(num_positions, dtype=bool)
+        plt.ion()
         _show_image(new_img)
+        beta = 1
+        E = 0
+        for p in range(num_positions):
+            for q in range(p + 1, num_positions):
+                E += _LJ(la.norm(positions[q] - positions[p]))
+        for step in range(num_steps):
+            # Choose a position randomly, and invert the state
+            p = np.random.randint(num_positions)
+            y, x = positions[p]
+            delta_E = 0
+            for q in range(num_positions):
+                if q == p:
+                    continue
+                if particles[q]:
+                    delta_E += _LJ(la.norm(positions[q] - positions[p]))
+            if particles[p]:
+                delta_E = -delta_E
+            accept = False
+            if delta_E < 0:
+                accept = True
+            else:
+                accept = (np.random.rand() < np.exp(-beta * delta_E))
+            if accept:
+                E += delta_E
+                print(E)
+                particles[p] = not particles[p]
+                if particles[p]:
+                    new_img[y, x, 0] = 1
+                else:
+                    new_img[y, x, 0] = 0
+            if step % 100 == 0:
+                _show_image(new_img, title=step)
+                plt.pause(0.2)
+        plt.ioff()
         return new_img
