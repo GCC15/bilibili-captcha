@@ -39,8 +39,7 @@ def temp_path(filename):
 
 
 def char_path(char, filename):
-    path = os.path.join(training_char_dir, char)
-    return os.path.join(path, filename)
+    return os.path.join(training_char_dir, char, filename)
 
 
 def clear_dir(directory):
