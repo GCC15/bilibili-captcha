@@ -38,8 +38,8 @@ def temp_path(filename):
     return os.path.join(temp_dir, filename)
 
 
-def char_path(char,filename):
-    path = os.path.join(training_char_dir,char)
+def char_path(char, filename):
+    path = os.path.join(training_char_dir, char)
     return os.path.join(path, filename)
 
 

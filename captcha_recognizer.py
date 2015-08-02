@@ -101,15 +101,13 @@ class CaptchaRecognizer:
         print(time.time() - t0)
         mpimg.imsave(c.temp_path('02a.anneal.png'), img_02a)
 
-        return
-
         # 3
         img_03, cut_line = self.find_vertical_separation_line(img_02)
         mpimg.imsave(c.temp_path('03.separate.png'), img_03, cmap=_cm_greys)
 
         # 4
         image_cut = self.cut_images(img_02, cut_line)
-        print(self.get_degree_of_similarity(image_cut[0], image_cut[1]))
+        # print(self.get_degree_of_similarity(image_cut[0], image_cut[1]))
         return
 
     # Convert to a grayscale image using HSV
@@ -128,8 +126,8 @@ class CaptchaRecognizer:
             for x in range(X):
                 h, s, v = img_hsv[y, x, :]
                 if (abs(h - std_h) <= self.h_tolerance and
-                            abs(s - std_s) <= self.s_tolerance and
-                            abs(v - std_v) <= self.v_tolerance):
+                        abs(s - std_s) <= self.s_tolerance and
+                        abs(v - std_v) <= self.v_tolerance):
                     delta_v = abs(v - std_v)
                     if delta_v <= 1e-4:
                         new_img[y, x] = 1
@@ -200,24 +198,27 @@ class CaptchaRecognizer:
         if cut_line[0] == 0:
             for i in range(int(len(cut_line) / 2) - 1):
                 cut_image_list.append(
-                    img[:, cut_line[2 * i + 1]:cut_line[2 * i + 2]])
+                    img[:, (cut_line[2 * i + 1] + 1):cut_line[2 * i + 2]])
                 mpimg.imsave(c.temp_path('cut{0}.png'.format(i + 1)),
-                             img[:, cut_line[2 * i + 1]:cut_line[2 * i + 2]],
+                             img[:,
+                             (cut_line[2 * i + 1] + 1):cut_line[2 * i + 2]],
                              cmap=_cm_greys)
         else:
             for i in range(int(len(cut_line) / 2)):
                 if i == 0:
-                    cut_image_list.append(img[:, 0:cut_line[0]])
+                    cut_image_list.append(img[:, 1:cut_line[0]])
                     mpimg.imsave(c.temp_path('04.cut{0}.png'.format(i + 1)),
-                                 img[:, 0:cut_line[0]], cmap=_cm_greys)
+                                 img[:, 1:cut_line[0]], cmap=_cm_greys)
                 else:
                     cut_image_list.append(
-                        img[:, cut_line[2 * i - 1]:cut_line[2 * i]])
+                        img[:, (cut_line[2 * i - 1] + 1):cut_line[2 * i]])
                     mpimg.imsave(c.temp_path('04.cut{0}.png'.format(i + 1)),
-                                 img[:, cut_line[2 * i - 1]:cut_line[2 * i]],
+                                 img[:,
+                                 (cut_line[2 * i - 1] + 1):cut_line[2 * i]],
                                  cmap=_cm_greys)
-        # for image in cut_image_list:
-            # resized_image_list.append(self.resize_image_to_standard(image)) TODO: bug
+                    # for image in cut_image_list:
+                    # resized_image_list.append(
+                    # self.resize_image_to_standard(image)) TODO: bug
         return cut_image_list
 
     # Requires two images to be of the same size and both black / white

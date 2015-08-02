@@ -114,14 +114,13 @@ def convert_train_image_to_char():
         img_02 = cap.remove_noise_with_neighbors(img_01)
         img_02 = cap.remove_noise_with_neighbors(img_02)
         _, cut_line = cap.find_vertical_separation_line(img_02)
-        img_list = cap.cut_images(img_02,cut_line)
+        img_list = cap.cut_images(img_02, cut_line)
         if len(img_list) == 5:
             success += 1
-            print("Successfully converted {0} images out of {1} images".format(success, total))
+            print("Successfully converted {0} images out of {1} images".format(
+                success, total))
             for j in range(5):
-                mpimg.imsave(c.char_path(i[j],i), img_list[j], cmap=_cm_greys)
-
-
+                mpimg.imsave(c.char_path(i[j], i), img_list[j], cmap=_cm_greys)
 
 if __name__ == '__main__':
     pass
