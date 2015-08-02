@@ -16,11 +16,13 @@ def _make_dirs(directory):
 
 dataset_dir = config_dict['dataset']
 training_set_dir = os.path.join(dataset_dir, config_dict['training'])
+training_char_dir = os.path.join(dataset_dir, config_dict['training_char'])
 test_set_dir = os.path.join(dataset_dir, config_dict['test'])
 temp_dir = config_dict['temp']
 
 _make_dirs(dataset_dir)
 _make_dirs(training_set_dir)
+_make_dirs(training_char_dir)
 _make_dirs(test_set_dir)
 _make_dirs(temp_dir)
 

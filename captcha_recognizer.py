@@ -237,7 +237,7 @@ class CaptchaRecognizer:
         width, length = img.shape
         if self.width != width:
             raise ValueError("The width of the image is not standard")
-        img_resized = img.resize((int(self.width), round((self.length - 10) / 5)))  # TODO: bug
+        img_resized = img.resize((int(self.width), round(self.length/(self.character_num*1.0) - 2)))  # TODO: bug
         return img_resized
 
     # https://en.wikipedia.org/wiki/Simulated_annealing
