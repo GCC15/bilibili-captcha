@@ -75,7 +75,8 @@ class CaptchaRecognizer:
         self.v_tolerance = 60 / 100
         self.neighbor_low = 0
         self.neighbor_high = 5
-        self.sep_constant = 0.03  # this means all in one column must be white, if set to 0.04, bad for 'QN4EL'
+        self.sep_constant = 0.03  # this means all in one column must be
+        # white, if set to 0.04, bad for 'QN4EL'
         self.character_num = 5
 
     def recognize(self, img):
@@ -236,7 +237,8 @@ class CaptchaRecognizer:
         width, length = img.shape
         if self.width != width:
             raise ValueError("The width of the image is not standard")
-        img_resized = img.resize((int(self.width), round(self.length/(self.character_num*1.0) - 2)))  # TODO: bug
+        img_resized = img.resize((int(self.width), round(
+            self.length / (self.character_num * 1.0) - 2)))  # TODO: bug
         return img_resized
 
     # https://en.wikipedia.org/wiki/Simulated_annealing
@@ -268,7 +270,8 @@ class CaptchaRecognizer:
             # Choose a position randomly, and invert the state
             p = np.random.randint(num_positions)
             y, x = positions[p]
-            delta_E = np.nansum(_LJ(la.norm(positions[particles] - positions[p], axis=1)))
+            delta_E = np.nansum(
+                _LJ(la.norm(positions[particles] - positions[p], axis=1)))
             if particles[p]:
                 delta_E = -delta_E
             if delta_E < 0:
