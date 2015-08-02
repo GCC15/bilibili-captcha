@@ -85,8 +85,7 @@ class CaptchaRecognizer:
         mpimg.imsave(c.temp_path('02.neighbor.png'), img_02, cmap=_cm)
 
         # 3
-        img_03 = self.find_vertical_separation_line(img_02)[0]
-        cut_line = self.find_vertical_separation_line(img_02)[1]
+        img_03, cut_line = self.find_vertical_separation_line(img_02)
         mpimg.imsave(c.temp_path('03.separate.png'), img_03, cmap=_cm)
 
         # 4
@@ -144,7 +143,7 @@ class CaptchaRecognizer:
                         sum_color += color
                         if color > 0:
                             num_neighbors += 1
-                if img[y, x] * 2 >= sum_color:
+                if img[y, x] * 2 > sum_color:
                     new_img[y, x] = 0
                 elif img[y, x] > 0:
                     if num_neighbors <= neighbor_low:
