@@ -8,7 +8,7 @@ import config as c
 
 
 # https://en.wikipedia.org/wiki/Lennard-Jones_potential
-def _LJ(r, delta=4):
+def _LJ(r, delta=2.2):
     return np.power(delta / r, 12) - 2 * np.power(delta / r, 6)
 
 
@@ -237,9 +237,9 @@ class CaptchaRecognizer:
         return img_resized
 
     # https://en.wikipedia.org/wiki/Simulated_annealing
-    def anneal(self, img, num_steps=10000):
+    def anneal(self, img, num_steps=500):
         Y, X = img.shape
-        # User RGB for now, just for visualization
+        # TODO: User RGB for now, just for visualization
         new_img = np.zeros((Y, X, 3))
         for i in range(3):
             new_img[:, :, i] = 1 - img.copy()
@@ -255,12 +255,13 @@ class CaptchaRecognizer:
         particles = np.ones(num_positions, dtype=bool)
         plt.ion()
         _show_image(new_img)
-        beta = 1
+        # TODO: Just for testing
         E = 0
         for p in range(num_positions):
             for q in range(p + 1, num_positions):
                 E += _LJ(la.norm(positions[q] - positions[p]))
         for step in range(num_steps):
+            beta = 0.1 + step / 500
             # Choose a position randomly, and invert the state
             p = np.random.randint(num_positions)
             y, x = positions[p]
@@ -272,21 +273,20 @@ class CaptchaRecognizer:
                     delta_E += _LJ(la.norm(positions[q] - positions[p]))
             if particles[p]:
                 delta_E = -delta_E
-            accept = False
             if delta_E < 0:
                 accept = True
             else:
                 accept = (np.random.rand() < np.exp(-beta * delta_E))
             if accept:
                 E += delta_E
-                print(E)
                 particles[p] = not particles[p]
                 if particles[p]:
                     new_img[y, x, 0] = 1
                 else:
                     new_img[y, x, 0] = 0
-            if step % 100 == 0:
+            if step % 20 == 0:
+                print('Step {}. beta {}. E {}'.format(step, beta, E))
                 _show_image(new_img, title=step)
-                plt.pause(0.2)
+                plt.pause(0.1)
         plt.ioff()
         return new_img
