@@ -47,14 +47,14 @@ def _int_to_rgb(n):
 
 
 # Color map for grayscale images
-_cm = plt.cm.get_cmap('Greys')
+_cm_greys = plt.cm.get_cmap('Greys')
 
 
 # Show grayscale image in matplotlib window
-def _show_image(img):
+def _show_image(img, cmap=_cm_greys):
     plt.clf()
     plt.axis('off')
-    plt.imshow(img, cmap=_cm)
+    plt.imshow(img, cmap=cmap)
     plt.show()
 
 
@@ -78,15 +78,18 @@ class CaptchaRecognizer:
 
         # 1
         img_01 = self.remove_noise_with_hsv(img)
-        mpimg.imsave(c.temp_path('01.hsv.png'), img_01, cmap=_cm)
+        mpimg.imsave(c.temp_path('01.hsv.png'), img_01, cmap=_cm_greys)
 
         # 2
         img_02 = self.remove_noise_with_neighbors(img_01)
-        mpimg.imsave(c.temp_path('02.neighbor.png'), img_02, cmap=_cm)
+        mpimg.imsave(c.temp_path('02.neighbor.png'), img_02, cmap=_cm_greys)
 
+        img_02a = self.mark_ones(img_02)
+        mpimg.imsave(c.temp_path('02a.neighbor.png'), img_02a)
+        return
         # 3
         img_03, cut_line = self.find_vertical_separation_line(img_02)
-        mpimg.imsave(c.temp_path('03.separate.png'), img_03, cmap=_cm)
+        mpimg.imsave(c.temp_path('03.separate.png'), img_03, cmap=_cm_greys)
 
         # 4
         image_cut = self.cut_images(img_02, cut_line)
@@ -181,19 +184,19 @@ class CaptchaRecognizer:
                     img[:, cut_line[2 * i + 1]:cut_line[2 * i + 2]])
                 mpimg.imsave(c.temp_path('cut{0}.png'.format(i + 1)),
                              img[:, cut_line[2 * i + 1]:cut_line[2 * i + 2]],
-                             cmap=_cm)
+                             cmap=_cm_greys)
         else:
             for i in range(int(len(cut_line) / 2)):
                 if i == 0:
                     cut_image_list.append(img[:, 0:cut_line[0]])
                     mpimg.imsave(c.temp_path('04.cut{0}.png'.format(i + 1)),
-                                 img[:, 0:cut_line[0]], cmap=_cm)
+                                 img[:, 0:cut_line[0]], cmap=_cm_greys)
                 else:
                     cut_image_list.append(
                         img[:, cut_line[2 * i - 1]:cut_line[2 * i]])
                     mpimg.imsave(c.temp_path('04.cut{0}.png'.format(i + 1)),
                                  img[:, cut_line[2 * i - 1]:cut_line[2 * i]],
-                                 cmap=_cm)
+                                 cmap=_cm_greys)
         for image in cut_image_list:
             resized_image_list.append(self.resize_image_to_standard(image))
         return resized_image_list
@@ -219,3 +222,15 @@ class CaptchaRecognizer:
             raise ValueError("The width of the image is not standard")
         img_resized = img.resize((int(self.width), round((self.length - 10) / 5)))  # TODO: bug
         return img_resized
+
+    def mark_ones(self, img):
+        Y, X = img.shape
+        new_img = np.zeros((Y, X, 3))
+        for i in range(3):
+            new_img[:,:,i] = 1 - img.copy()
+        for y in range(Y):
+            for x in range(X):
+                if img[y, x] == 1:
+                    new_img[y, x, 0] = 1
+        _show_image(new_img)
+        return new_img
