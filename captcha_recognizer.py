@@ -6,6 +6,11 @@ import numpy as np
 import config as c
 
 
+# https://en.wikipedia.org/wiki/Lennard-Jones_potential
+def _LJ(r, delta):
+    return np.power(delta / r, 12) - 2 * np.power(delta / r, 6)
+
+
 # # https://en.wikipedia.org/wiki/Moore_neighborhood
 # def _chebyshev_neighbors(r=1):
 #     d = range(-r, r + 1)
@@ -227,7 +232,7 @@ class CaptchaRecognizer:
         Y, X = img.shape
         new_img = np.zeros((Y, X, 3))
         for i in range(3):
-            new_img[:,:,i] = 1 - img.copy()
+            new_img[:, :, i] = 1 - img.copy()
         for y in range(Y):
             for x in range(X):
                 if img[y, x] == 1:
