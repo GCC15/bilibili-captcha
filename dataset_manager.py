@@ -6,6 +6,9 @@ import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import captcha_source
 import config as c
+import captcha_recognizer as caprec
+
+_cm_greys = plt.cm.get_cmap('Greys')
 
 
 def _fetch_dir(directory, num=1, use_https=False):
@@ -98,6 +101,26 @@ def _list_png(directory):
         return ext == '.png'
 
     return list(filter(png_filter, os.listdir(directory)))
+
+
+def convert_train_image_to_char():
+    total = 0
+    success = 0
+    cap = caprec.CaptchaRecognizer()
+    for i in _list_png(c.training_set_dir):
+        total += 1
+        img = get_training_image(i[0:5])
+        img_01 = cap.remove_noise_with_hsv(img)
+        img_02 = cap.remove_noise_with_neighbors(img_01)
+        img_02 = cap.remove_noise_with_neighbors(img_02)
+        _, cut_line = cap.find_vertical_separation_line(img_02)
+        img_list = cap.cut_images(img_02,cut_line)
+        if len(img_list) == 5:
+            success += 1
+            print("Successfully converted {0} images out of {1} images".format(success, total))
+            for j in range(5):
+                mpimg.imsave(c.char_path(i[j],i), img_list[j], cmap=_cm_greys)
+
 
 
 if __name__ == '__main__':

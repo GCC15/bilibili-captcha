@@ -81,6 +81,7 @@ class CaptchaRecognizer:
         self.character_num = 5
 
     def recognize(self, img):
+
         width, length, _ = img.shape
         self.width = width
         self.length = length
@@ -193,7 +194,7 @@ class CaptchaRecognizer:
     def cut_images(self, img, cut_line):
         cut_image_list = []
         resized_image_list = []
-        print(cut_line)
+        # print(cut_line)
         if len(cut_line) > 2 * (self.character_num + 1):
             print("Abnormal, the image will be cut into more than 5 pieces")
         if cut_line[0] == 0:
@@ -215,9 +216,9 @@ class CaptchaRecognizer:
                     mpimg.imsave(c.temp_path('04.cut{0}.png'.format(i + 1)),
                                  img[:, cut_line[2 * i - 1]:cut_line[2 * i]],
                                  cmap=_cm_greys)
-        for image in cut_image_list:
-            resized_image_list.append(self.resize_image_to_standard(image))
-        return resized_image_list
+        # for image in cut_image_list:
+            # resized_image_list.append(self.resize_image_to_standard(image)) TODO: bug
+        return cut_image_list
 
     # Requires two images to be of the same size and both black / white
     def get_degree_of_similarity(self, img1, img2):

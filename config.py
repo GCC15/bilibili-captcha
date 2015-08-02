@@ -33,8 +33,14 @@ _make_dirs(test_set_dir)
 _make_dirs(temp_dir)
 _make_all_char_dirs()
 
+
 def temp_path(filename):
     return os.path.join(temp_dir, filename)
+
+
+def char_path(char,filename):
+    path = os.path.join(training_char_dir,char)
+    return os.path.join(path, filename)
 
 
 def clear_dir(directory):
