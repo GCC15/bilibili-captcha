@@ -102,11 +102,13 @@ class CaptchaRecognizer:
         mpimg.imsave(c.temp_path('02a.anneal.png'), img_02a)
 
         # 3
+        self.cut_images_by_floodfill(img_02)
+        return
         img_03, cut_line = self.find_vertical_separation_line(img_02)
         mpimg.imsave(c.temp_path('03.separate.png'), img_03, cmap=_cm_greys)
 
         # 4
-        image_cut = self.cut_images(img_02, cut_line)
+        image_cut = self.cut_images_by_vertical_line(img_02, cut_line)
         # print(self.get_degree_of_similarity(image_cut[0], image_cut[1]))
         return
 
@@ -189,7 +191,7 @@ class CaptchaRecognizer:
                 sep_line_list_final.append(sep_line_list[i])
         return [new_img, sep_line_list_final]
 
-    def cut_images(self, img, cut_line):
+    def cut_images_by_vertical_line(self, img, cut_line):
         cut_image_list = []
         resized_image_list = []
         # print(cut_line)
@@ -221,18 +223,43 @@ class CaptchaRecognizer:
                     # self.resize_image_to_standard(image)) TODO: bug
         return cut_image_list
 
+    def cut_images_by_floodfill(self, img):
+        height, width = img.shape
+        aux_list = []
+        region_point = []
+        for x in range(width):
+            for y in range(height):
+                if img[y,x] == 1:
+                    start = (y,x)
+                    aux_list.append(start)
+                    break
+        while len(aux_list) != 0:
+            (y,x) = aux_list.pop()
+            if (y,x) not in region_point:
+                region_point.append((y,x))
+            if x+1 < width and img[y,x+1] == 1 and (y,x+1) not in region_point:
+                aux_list.append((y,x+1))
+            if x-1 >= 0 and img[y,x-1] == 1 and (y,x-1) not in region_point:
+                aux_list.append((y,x+1))
+            if y+1 < height and img[y+1,x] == 1 and (y+1,x) not in region_point:
+                aux_list.append((y+1,x))
+            if y-1 >= 0 and img[y-1,x] == 1 and (y-1,x) not in region_point:
+                aux_list.append((y-1,x))
+        print(region_point)
+
+
     # Requires two images to be of the same size and both black / white
     def get_degree_of_similarity(self, img1, img2):
-        width1, length1 = img1.shape
-        width2, length2 = img2.shape
-        if width1 != width2 or length1 != length2:
+        height1, width1 = img1.shape
+        height2, width2 = img2.shape
+        if width1 != width2 or height1 != height2:
             raise ValueError("Two images of different size are compared")
         point_num = 0
-        for x in range(length1):
-            for y in range(width1):
+        for x in range(width1):
+            for y in range(height1):
                 if img1[y, x].all() == img2[y, x].all():
                     point_num += 1
-        return point_num / (width1 * length1 * 1.0)
+        return point_num / (width1 * height1 * 1.0)
 
     def resize_image_to_standard(self, img):
         if self.width is None or self.length is None:
