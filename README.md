@@ -14,6 +14,8 @@ The Python program attempts to recognize [CAPTCHA images](http://www.bilibili.co
 
 [A Study on Captcha Recognition](http://dx.doi.org/10.1109/IIH-MSP.2014.105)
 
+[An Efficient Segmentation Algorithm for CAPTCHAs with Line cluttering and Character Warping](http://dx.doi.org/10.1007/s11042-009-0341-5)
+
 [Breaking Visual CAPTCHAs with Naive Pattern Recognition Algorithms](http://dx.doi.org/10.1109/ACSAC.2007.47)
 
 [Decoding CAPTCHA's](http://www.boyter.org/decoding-captchas/)
