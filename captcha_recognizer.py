@@ -1,4 +1,5 @@
 # from PIL import Image
+import time
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 import matplotlib.image as mpimg
@@ -9,7 +10,10 @@ import config as c
 
 # https://en.wikipedia.org/wiki/Lennard-Jones_potential
 def _LJ(r, delta=2.2):
-    return np.power(delta / r, 12) - 2 * np.power(delta / r, 6)
+    if r == 0:
+        return 0
+    else:
+        return np.power(delta / r, 12) - 2 * np.power(delta / r, 6)
 
 
 # # https://en.wikipedia.org/wiki/Moore_neighborhood
@@ -92,7 +96,9 @@ class CaptchaRecognizer:
         img_02 = self.remove_noise_with_neighbors(img_02)
         mpimg.imsave(c.temp_path('02.neighbor.png'), img_02, cmap=_cm_greys)
 
+        t0 = time.time()
         img_02a = self.anneal(img_02)
+        print(time.time() - t0)
         mpimg.imsave(c.temp_path('02a.anneal.png'), img_02a)
 
         return
@@ -257,20 +263,15 @@ class CaptchaRecognizer:
         _show_image(new_img)
         # TODO: Just for testing
         E = 0
-        for p in range(num_positions):
-            for q in range(p + 1, num_positions):
-                E += _LJ(la.norm(positions[q] - positions[p]))
+        # for p in range(num_positions):
+        #     for q in range(p + 1, num_positions):
+        #         E += _LJ(la.norm(positions[q] - positions[p]))
         for step in range(num_steps):
             beta = 0.1 + step / 500
             # Choose a position randomly, and invert the state
             p = np.random.randint(num_positions)
             y, x = positions[p]
-            delta_E = 0
-            for q in range(num_positions):
-                if q == p:
-                    continue
-                if particles[q]:
-                    delta_E += _LJ(la.norm(positions[q] - positions[p]))
+            delta_E = _LJ(la.norm(positions - positions[p]))
             if particles[p]:
                 delta_E = -delta_E
             if delta_E < 0:
@@ -278,7 +279,7 @@ class CaptchaRecognizer:
             else:
                 accept = (np.random.rand() < np.exp(-beta * delta_E))
             if accept:
-                E += delta_E
+                # E += delta_E
                 particles[p] = not particles[p]
                 if particles[p]:
                     new_img[y, x, 0] = 1
@@ -286,7 +287,7 @@ class CaptchaRecognizer:
                     new_img[y, x, 0] = 0
             if step % 20 == 0:
                 print('Step {}. beta {}. E {}'.format(step, beta, E))
-                _show_image(new_img, title=step)
-                plt.pause(0.1)
+                # _show_image(new_img, title=step)
+                # plt.pause(0.1)
         plt.ioff()
         return new_img
