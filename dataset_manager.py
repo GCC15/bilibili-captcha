@@ -34,6 +34,10 @@ def clear_training_set():
     c.clear_dir(c.training_set_dir)
 
 
+def clear_training_chars():
+    c.clear_dir(c.training_char_dir)
+
+
 def clear_test_set():
     c.clear_dir(c.test_set_dir)
 
