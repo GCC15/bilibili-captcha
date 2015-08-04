@@ -129,8 +129,8 @@ class CaptchaRecognizer:
             for x in range(width):
                 h, s, v = img_hsv[y, x, :]
                 if (abs(h - std_h) <= self.h_tolerance and
-                        abs(s - std_s) <= self.s_tolerance and
-                        abs(v - std_v) <= self.v_tolerance):
+                            abs(s - std_s) <= self.s_tolerance and
+                            abs(v - std_v) <= self.v_tolerance):
                     delta_v = abs(v - std_v)
                     if delta_v <= 1e-4:
                         new_img[y, x] = 1
@@ -238,13 +238,17 @@ class CaptchaRecognizer:
             (y, x) = aux_list.pop()
             if (y, x) not in region_point:
                 region_point.append((y, x))
-            if x + 1 < width and img[y, x + 1] == 1 and (y, x + 1) not in region_point:
+            if x + 1 < width and img[y, x + 1] == 1 and (
+                    y, x + 1) not in region_point:
                 aux_list.append((y, x + 1))
-            if x - 1 >= 0 and img[y, x - 1] == 1 and (y, x - 1) not in region_point:
+            if x - 1 >= 0 and img[y, x - 1] == 1 and (
+                    y, x - 1) not in region_point:
                 aux_list.append((y, x + 1))
-            if y + 1 < height and img[y + 1, x] == 1 and (y + 1, x) not in region_point:
+            if y + 1 < height and img[y + 1, x] == 1 and (
+                        y + 1, x) not in region_point:
                 aux_list.append((y + 1, x))
-            if y - 1 >= 0 and img[y - 1, x] == 1 and (y - 1, x) not in region_point:
+            if y - 1 >= 0 and img[y - 1, x] == 1 and (
+                        y - 1, x) not in region_point:
                 aux_list.append((y - 1, x))
         print(region_point)
 
