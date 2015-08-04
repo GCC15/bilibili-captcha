@@ -9,7 +9,7 @@ import captcha_source
 def main():
     # test_fetch_training_set()
     test_captcha_recognizing()
-    # dataset_manager.convert_training_image_to_char()
+    # dataset_manager.partition_training_images_to_chars()
 
 
 def test_fetch_training_set():

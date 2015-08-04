@@ -10,7 +10,7 @@ import config as c
 
 
 # https://en.wikipedia.org/wiki/Lennard-Jones_potential
-def _LJ(r, delta=4):
+def _lj(r, delta=4):
     return np.power(delta / r, 12) - 2 * np.power(delta / r, 6)
 
 
@@ -303,7 +303,7 @@ class CaptchaRecognizer:
             y, x = positions[p]
             # noinspection PyTypeChecker
             delta_energy = np.nansum(
-                _LJ(la.norm(positions[particles] - positions[p], axis=1)))
+                _lj(la.norm(positions[particles] - positions[p], axis=1)))
             if particles[p]:
                 delta_energy = -delta_energy
             if delta_energy < 0:

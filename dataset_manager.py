@@ -2,15 +2,13 @@
 
 import os
 import random
+import json
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import captcha_source
 import config as c
 from captcha_recognizer import CaptchaRecognizer
 import time
-
-#       'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
-chars = '    EFGH JKLMN PQR TUVWXY  123456 89'.replace(' ', '')
 
 _cm_greys = plt.cm.get_cmap('Greys')
 _png = '.png'
@@ -20,17 +18,21 @@ training_set_dir = os.path.join(dataset_dir, c.get('training'))
 training_char_dir = os.path.join(dataset_dir, c.get('training_char'))
 test_set_dir = os.path.join(dataset_dir, c.get('test'))
 
+_PARTITION_JSON = os.path.join(dataset_dir, 'partition.json')
+_partition_json = json.load(open(_PARTITION_JSON))
+_FAIL = 'fail'
+_SUCCESS = 'success'
+
 
 def _get_training_char_dir(char):
     return os.path.join(training_char_dir, char)
 
 
 def _make_all_char_dirs():
-    for char in chars:
+    for char in captcha_source.chars:
         c.make_dirs(_get_training_char_dir(char))
 
 
-c.make_dirs(dataset_dir)
 c.make_dirs(training_set_dir)
 c.make_dirs(training_char_dir)
 c.make_dirs(test_set_dir)
@@ -59,8 +61,11 @@ def _fetch_captchas_to_dir(directory, num=1, use_https=False):
         seq = captcha_source.canonicalize(seq)
         if len(seq) != captcha_source.captcha_length:
             raise ValueError('Incorrect length')
-        # Assume the char sequence is not met before
-        mpimg.imsave(os.path.join(directory, _add_suffix(seq)), img)
+        path = os.path.join(directory, _add_suffix(seq))
+        if not os.path.isfile(path):
+            mpimg.imsave(path, img)
+        else:
+            print('Warning: char sequence already exists in dataset! Skipping')
     plt.ioff()
 
 
@@ -109,6 +114,10 @@ def _get_images(directory, num=1):
     return [_get_image(directory, filenames[i]) for i in range(num)]
 
 
+def _add_suffix(basename, suffix=_png):
+    return '{}{}'.format(basename, suffix)
+
+
 def _remove_suffix(filename):
     basename, ext = os.path.splitext(filename)
     return basename
@@ -117,10 +126,6 @@ def _remove_suffix(filename):
 def _get_suffix(filename):
     basename, ext = os.path.splitext(filename)
     return ext
-
-
-def _add_suffix(basename, suffix=_png):
-    return '{}{}'.format(basename, suffix)
 
 
 def get_test_image(seq):
@@ -172,46 +177,54 @@ def _list_png(directory):
 #                   os.path.join(c.training_set_dir, (png_list[i][0:5] + '.png')))
 
 
-# def convert_training_image_to_char(force_update=False):
-#     start = time.time()
-#     num_update = 0
-#     num_success = 0
-#     recognizer = CaptchaRecognizer()
-#     if force_update:
-#         _convert_all_training_png_to_original_name()
-#         clear_training_chars()
-#     num_total = len(_list_png(c.training_set_dir))
-#     seq_list = _list_unconverted_seq(c.training_set_dir)
-#     file_list = _list_unconverted_png(c.training_set_dir)
-#     for s in range(len(seq_list)):
-#         seq = seq_list[s]
-#         print('{}/{}: {}'.format(s, len(seq_list), seq))
-#         num_update += 1
-#         img = get_training_image(seq)
-#         img_01 = recognizer.remove_noise_with_hsv(img)
-#         img_02 = recognizer.remove_noise_with_neighbors(img_01)
-#         img_02 = recognizer.remove_noise_with_neighbors(img_02)
-#         _, cut_line = recognizer.find_vertical_separation_line(img_02)
-#         img_list = recognizer.cut_images_by_vertical_line(img_02, cut_line)
-#         if len(img_list) == captcha_source.captcha_length:
-#             num_success += 1
-#             for i in range(captcha_source.captcha_length):
-#                 path = c.char_path(
-#                     seq[i],
-#                     _add_suffix('{}.{}'.format(seq, i + 1)))
-#                 mpimg.imsave(path, img_list[i], cmap=_cm_greys)
-#             os.rename(os.path.join(c.training_set_dir, file_list[s]),
-#                       os.path.join(c.training_set_dir,
-#                                    (file_list[s][0:-4] + '.con.suc.png')))
-#         else:
-#             os.rename(os.path.join(c.training_set_dir, file_list[s]),
-#                       os.path.join(c.training_set_dir,
-#                                    (file_list[s][0:-4] + '.con.png')))
-#     print('Total: {}'.format(num_total))
-#     print('Update: {}'.format(num_update))
-#     print('Success: {}'.format(num_success))
-#     end = time.time()
-#     print('Used time:', end - start)
+def partition_training_images_to_chars(force_update=False):
+    time_start = time.time()
+    fail_list = [] if force_update else _partition_json[_FAIL]
+    success_list = [] if force_update else _partition_json[_SUCCESS]
+    old_file_set = set(fail_list + success_list)
+
+    def filename_filter(f):
+        return f not in old_file_set
+
+    filenames = _list_png(training_set_dir)
+    num_total = len(filenames)
+    filenames = list(filter(filename_filter, filenames))
+    num_update = len(filenames)
+    num_success = 0
+    recognizer = CaptchaRecognizer()
+    for n in range(num_update):
+        filename = filenames[n]
+        seq = _remove_suffix(filename)
+        print('{}/{}: {}'.format(n, num_update, seq))
+        img = get_training_image(seq)
+        img_01 = recognizer.remove_noise_with_hsv(img)
+        img_02 = recognizer.remove_noise_with_neighbors(img_01)
+        img_02 = recognizer.remove_noise_with_neighbors(img_02)
+        _, cut_line = recognizer.find_vertical_separation_line(img_02)
+        img_list = recognizer.cut_images_by_vertical_line(img_02, cut_line)
+        if len(img_list) == captcha_source.captcha_length:
+            success_list.append(filename)
+            num_success += 1
+            for i in range(len(img_list)):
+                path = char_path(seq[i], _add_suffix('{}.{}'.format(seq, i + 1)))
+                mpimg.imsave(path, img_list[i], cmap=_cm_greys)
+        else:
+            fail_list.append(filename)
+    success_list.sort()
+    fail_list.sort()
+    json.dump(
+        {
+            _FAIL: fail_list,
+            _SUCCESS: success_list
+        },
+        open(_PARTITION_JSON, 'w'),
+        indent=2
+    )
+    print('Total: {}'.format(num_total))
+    print('Update: {}'.format(num_update))
+    print('Success: {}'.format(num_success))
+    time_end = time.time()
+    print('Elapsed time: {}'.format(time_end - time_start))
 
 
 if __name__ == '__main__':
