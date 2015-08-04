@@ -58,7 +58,7 @@ def _int_to_rgb(n):
 _cm_greys = plt.cm.get_cmap('Greys')
 
 
-# Show grayscale image in matplotlib window
+# Show image in matplotlib window
 def _show_image(img, cmap=_cm_greys, title=None):
     plt.clf()
     plt.axis('off')
@@ -74,8 +74,8 @@ class CaptchaRecognizer:
         self.h_tolerance = 6 / 360
         self.s_tolerance = 34 / 100
         self.v_tolerance = 60 / 100
-        self.neighbor_low = 0
-        self.neighbor_high = 5
+        # self.neighbor_low = 0
+        # self.neighbor_high = 5
         self.sep_constant = 0.03  # this means all in one column must be
         # white, if set to 0.04, bad for 'QN4EL'
         self.character_num = 5
@@ -98,14 +98,15 @@ class CaptchaRecognizer:
 
         t0 = time.time()
         img_02a = self.anneal(img_02)
-        print(time.time() - t0)
+        t1 = time.time()
+        print('Annealing time: {}'.format(t1 - t0))
         mpimg.imsave(c.temp_path('02a.anneal.png'), img_02a)
 
         # 3
-        self.cut_images_by_floodfill(img_02)
-        return
-        img_03, cut_line = self.find_vertical_separation_line(img_02)
-        mpimg.imsave(c.temp_path('03.separate.png'), img_03, cmap=_cm_greys)
+        # img_03f = self.cut_images_by_floodfill(img_02)
+
+        img_03v, cut_line = self.find_vertical_separation_line(img_02)
+        mpimg.imsave(c.temp_path('03v.separate.png'), img_03v, cmap=_cm_greys)
 
         # 4
         image_cut = self.cut_images_by_vertical_line(img_02, cut_line)
@@ -128,8 +129,8 @@ class CaptchaRecognizer:
             for x in range(width):
                 h, s, v = img_hsv[y, x, :]
                 if (abs(h - std_h) <= self.h_tolerance and
-                            abs(s - std_s) <= self.s_tolerance and
-                            abs(v - std_v) <= self.v_tolerance):
+                        abs(s - std_s) <= self.s_tolerance and
+                        abs(v - std_v) <= self.v_tolerance):
                     delta_v = abs(v - std_v)
                     if delta_v <= 1e-4:
                         new_img[y, x] = 1
@@ -248,33 +249,33 @@ class CaptchaRecognizer:
         print(region_point)
 
     # Requires two images to be of the same size and both black / white
-    def get_degree_of_similarity(self, img1, img2):
-        height1, width1 = img1.shape
-        height2, width2 = img2.shape
-        if width1 != width2 or height1 != height2:
-            raise ValueError("Two images of different size are compared")
-        point_num = 0
-        for x in range(width1):
-            for y in range(height1):
-                if img1[y, x].all() == img2[y, x].all():
-                    point_num += 1
-        return point_num / (width1 * height1 * 1.0)
+    # def get_degree_of_similarity(self, img1, img2):
+    #     height1, width1 = img1.shape
+    #     height2, width2 = img2.shape
+    #     if width1 != width2 or height1 != height2:
+    #         raise ValueError("Two images of different size are compared")
+    #     point_num = 0
+    #     for x in range(width1):
+    #         for y in range(height1):
+    #             if img1[y, x].all() == img2[y, x].all():
+    #                 point_num += 1
+    #     return point_num / (width1 * height1 * 1.0)
 
-    def resize_image_to_standard(self, img):
-        if self.width is None or self.length is None:
-            raise ValueError("Standard size unknown")
-        width, length = img.shape
-        if self.width != width:
-            raise ValueError("The width of the image is not standard")
-        img_resized = img.resize((int(self.width), round(
-            self.length / (self.character_num * 1.0) - 2)))  # TODO: bug
-        return img_resized
+    # def resize_image_to_standard(self, img):
+    #     if self.width is None or self.length is None:
+    #         raise ValueError("Standard size unknown")
+    #     width, length = img.shape
+    #     if self.width != width:
+    #         raise ValueError("The width of the image is not standard")
+    #     img_resized = img.resize((int(self.width), round(
+    #         self.length / (self.character_num * 1.0) - 2)))  # TODO: bug
+    #     return img_resized
 
     # https://en.wikipedia.org/wiki/Simulated_annealing
     def anneal(self, img, num_steps=500):
         np.seterr(divide='ignore', invalid='ignore')
         height, width = img.shape
-        # TODO: User RGB for now, just for visualization
+        # TODO: Use RGB for now, just for visualization
         new_img = np.zeros((height, width, 3))
         for i in range(3):
             new_img[:, :, i] = 1 - img.copy()
@@ -288,7 +289,7 @@ class CaptchaRecognizer:
         num_positions = positions.shape[0]
         print('{} Positions'.format(num_positions))
         particles = np.ones(num_positions, dtype=bool)
-        plt.ion()
+        # plt.ion()
         # _show_image(new_img)
         # TODO: Just for testing
         E = 0
@@ -301,21 +302,21 @@ class CaptchaRecognizer:
             p = np.random.randint(num_positions)
             y, x = positions[p]
             # noinspection PyTypeChecker
-            delta_E = np.nansum(
+            delta_energy = np.nansum(
                 _LJ(la.norm(positions[particles] - positions[p], axis=1)))
             if particles[p]:
-                delta_E = -delta_E
-            if delta_E < 0:
+                delta_energy = -delta_energy
+            if delta_energy < 0:
                 accept = True
             else:
-                accept = (random.random() < np.exp(-beta * delta_E))
+                accept = (random.random() < np.exp(-beta * delta_energy))
             if accept:
-                E += delta_E
+                E += delta_energy
                 particles[p] = not particles[p]
                 new_img[y, x, 0] = particles[p]
             if step % 50 == 0:
                 print('Step {}. beta {}. E {}'.format(step, beta, E))
                 # _show_image(new_img, title=step)
                 # plt.pause(0.1)
-        plt.ioff()
+        # plt.ioff()
         return new_img

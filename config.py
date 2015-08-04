@@ -1,45 +1,32 @@
-# Configurations and file system related operations
+# Configurations (e.g. paths), and generic file system operations
+# Use me:
+# import config as c
 
 import os
 import json
 
-CONFIG_JSON = 'config.json'
-print('Loading {}'.format(CONFIG_JSON))
-config_dict = json.load(open(CONFIG_JSON))
-chars = '    EFGH JKLMN PQR TUVWXY  123456 89'.replace(' ', '')
+_CONFIG_JSON = 'config.json'
+_json = json.load(open(_CONFIG_JSON))
 
 
-# Create a directory if not exist
-def _make_dirs(directory):
+def get(key):
+    return _json[key]
+
+
+_temp_dir = get('temp')
+
+
+# Create a directory and its parents, if necessary
+def make_dirs(directory):
     if not os.path.exists(directory):
         os.makedirs(directory)
 
 
-def _make_all_char_dirs():
-    for i in chars:
-        _make_dirs(os.path.join(training_char_dir, i))
+make_dirs(_temp_dir)
 
 
-dataset_dir = config_dict['dataset']
-training_set_dir = os.path.join(dataset_dir, config_dict['training'])
-training_char_dir = os.path.join(dataset_dir, config_dict['training_char'])
-test_set_dir = os.path.join(dataset_dir, config_dict['test'])
-temp_dir = config_dict['temp']
-
-_make_dirs(dataset_dir)
-_make_dirs(training_set_dir)
-_make_dirs(training_char_dir)
-_make_dirs(test_set_dir)
-_make_dirs(temp_dir)
-_make_all_char_dirs()
-
-
-def temp_path(filename):
-    return os.path.join(temp_dir, filename)
-
-
-def char_path(char, filename):
-    return os.path.join(training_char_dir, char, filename)
+def temp_path(path):
+    return os.path.join(_temp_dir, path)
 
 
 def clear_dir(directory):
@@ -50,4 +37,4 @@ def clear_dir(directory):
 
 
 def clear_temp():
-    clear_dir(temp_dir)
+    clear_dir(_temp_dir)
