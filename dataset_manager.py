@@ -160,7 +160,7 @@ def convert_training_image_to_char(force_update=False):
         img_02 = recognizer.remove_noise_with_neighbors(img_01)
         img_02 = recognizer.remove_noise_with_neighbors(img_02)
         _, cut_line = recognizer.find_vertical_separation_line(img_02)
-        img_list = recognizer.cut_images(img_02, cut_line)
+        img_list = recognizer.cut_images_by_vertical_line(img_02, cut_line)
         if len(img_list) == captcha_source.captcha_length:
             num_success += 1
             for i in range(captcha_source.captcha_length):
@@ -168,7 +168,11 @@ def convert_training_image_to_char(force_update=False):
                     seq[i],
                     _get_filename_from_basename('{}.{}'.format(seq, i + 1)))
                 mpimg.imsave(path, img_list[i], cmap=_cm_greys)
-        os.rename(os.path.join(c.training_set_dir, file_list[s]),
+            os.rename(os.path.join(c.training_set_dir, file_list[s]),
+                  os.path.join(c.training_set_dir,
+                               (file_list[s][0:-4] + '.con.suc.png')))
+        else:
+            os.rename(os.path.join(c.training_set_dir, file_list[s]),
                   os.path.join(c.training_set_dir,
                                (file_list[s][0:-4] + '.con.png')))
     print('Total: {}'.format(num_total))
