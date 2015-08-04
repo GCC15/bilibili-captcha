@@ -41,7 +41,9 @@ def clear_training_set():
 
 
 def clear_training_chars():
-    c.clear_dir(c.training_char_dir)
+    foldernames = os.listdir(c.training_char_dir)
+    for folder in foldernames:
+        c.clear_dir(os.path.join(c.training_char_dir,folder))
 
 
 def clear_test_set():
@@ -148,6 +150,7 @@ def convert_training_image_to_char(force_update=False):
     recognizer = CaptchaRecognizer()
     if force_update:
         _convert_all_training_png_to_original_name()
+        clear_training_chars()
     num_total = len(_list_png(c.training_set_dir))
     seq_list = _list_unconverted_seq(c.training_set_dir)
     file_list = _list_unconverted_png(c.training_set_dir)
