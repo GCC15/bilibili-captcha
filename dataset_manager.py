@@ -22,6 +22,7 @@ _PARTITION_JSON = os.path.join(dataset_dir, 'partition.json')
 _partition_json = json.load(open(_PARTITION_JSON))
 _FAIL = 'fail'
 _SUCCESS = 'success'
+_CAPTCHA_LENGTH = captcha_source.captcha_length
 
 
 def _get_training_char_dir(char):
@@ -59,8 +60,10 @@ def _fetch_captchas_to_dir(directory, num=1, use_https=False):
         plt.pause(1e-2)
         seq = input('[{}] Enter the char sequence: '.format(i))
         seq = captcha_source.canonicalize(seq)
-        if len(seq) != captcha_source.captcha_length:
-            raise ValueError('Incorrect length')
+        while len(seq) != _CAPTCHA_LENGTH:
+            print('Incorrect length, length should be {0}'.format(_CAPTCHA_LENGTH))
+            seq = input('[{}] Enter the char sequence: '.format(i))
+            seq = captcha_source.canonicalize(seq)
         path = os.path.join(directory, _add_suffix(seq))
         if not os.path.isfile(path):
             mpimg.imsave(path, img)

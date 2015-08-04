@@ -9,6 +9,7 @@ import numpy.linalg as la
 import config as c
 import os
 
+
 # https://en.wikipedia.org/wiki/Lennard-Jones_potential
 def _lj(r, delta=4):
     return np.power(delta / r, 12) - 2 * np.power(delta / r, 6)
@@ -75,9 +76,10 @@ def resize_image_to_standard(img, width, height):
     mpimg.imsave(c.temp_path('temp.png'), img, cmap=_cm_greys)
     img_pillow = Image.open(c.temp_path('temp.png'))
     img_pillow = img_pillow.convert('1')
-    img_pillow.resize((width,height),Image.BILINEAR).save(c.temp_path('temp1.png'))
+    img_pillow.resize((width, height), Image.BILINEAR).save(
+        c.temp_path('temp1.png'))
     img_plt = mpimg.imread(c.temp_path('temp1.png'))
-    mpimg.imsave(c.temp_path('temp2.png'),img_plt, cmap=_cm_greys)
+    mpimg.imsave(c.temp_path('temp2.png'), img_plt, cmap=_cm_greys)
     os.remove(c.temp_path('temp.png'))
     os.remove(c.temp_path('temp1.png'))
     os.remove(c.temp_path('temp2.png'))
@@ -127,7 +129,8 @@ class CaptchaRecognizer:
         # 4
         image_cut = self.cut_images_by_vertical_line(img_02, cut_line)
         for i in range(len(image_cut)):
-            mpimg.imsave(c.temp_path('04cut{0}.png'.format(i+1)), image_cut[i], cmap=_cm_greys)
+            mpimg.imsave(c.temp_path('04cut{0}.png'.format(i + 1)),
+                         image_cut[i], cmap=_cm_greys)
         # print(self.get_degree_of_similarity(image_cut[0], image_cut[1]))
         return
 
@@ -211,6 +214,7 @@ class CaptchaRecognizer:
         return [new_img, sep_line_list_final]
 
     def cut_images_by_vertical_line(self, img, cut_line):
+        _, width = img.shape
         cut_image_list = []
         resized_image_list = []
         # print(cut_line)
@@ -228,7 +232,8 @@ class CaptchaRecognizer:
                     cut_image_list.append(
                         img[:, (cut_line[2 * i - 1] + 1):cut_line[2 * i]])
         for image in cut_image_list:
-            resized_image_list.append(resize_image_to_standard(image,15,30))
+            resized_image_list.append(resize_image_to_standard(image,
+                                            round(width/5 - 7), 30))
         return resized_image_list
 
     def cut_images_by_floodfill(self, img):
