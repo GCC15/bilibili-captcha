@@ -1,4 +1,4 @@
-# from PIL import Image
+from PIL import Image
 import random
 import time
 import matplotlib.pyplot as plt
@@ -7,7 +7,7 @@ import matplotlib.image as mpimg
 import numpy as np
 import numpy.linalg as la
 import config as c
-
+import os
 
 # https://en.wikipedia.org/wiki/Lennard-Jones_potential
 def _lj(r, delta=4):
@@ -67,6 +67,23 @@ def _show_image(img, cmap=_cm_greys, title=None):
     plt.show()
 
 
+# Resize characters to another shape
+def resize_image_to_standard(img, width, height):
+    img_height, img_width = img.shape
+    if img_height != height:
+        raise ValueError('The height of the image is not standard')
+    mpimg.imsave(c.temp_path('temp.png'), img, cmap=_cm_greys)
+    img_pillow = Image.open(c.temp_path('temp.png'))
+    img_pillow = img_pillow.convert('1')
+    img_pillow.resize((width,height),Image.BILINEAR).save(c.temp_path('temp1.png'))
+    img_plt = mpimg.imread(c.temp_path('temp1.png'))
+    mpimg.imsave(c.temp_path('temp2.png'),img_plt, cmap=_cm_greys)
+    os.remove(c.temp_path('temp.png'))
+    os.remove(c.temp_path('temp1.png'))
+    os.remove(c.temp_path('temp2.png'))
+    return img_plt
+
+
 class CaptchaRecognizer:
     def __init__(self):
         # self.length = 0
@@ -81,7 +98,6 @@ class CaptchaRecognizer:
         self.character_num = 5
 
     def recognize(self, img):
-
         # width, length, _ = img.shape
         # self.width = width
         # self.length = length
@@ -110,6 +126,8 @@ class CaptchaRecognizer:
 
         # 4
         image_cut = self.cut_images_by_vertical_line(img_02, cut_line)
+        for i in range(len(image_cut)):
+            mpimg.imsave(c.temp_path('04cut{0}.png'.format(i+1)), image_cut[i], cmap=_cm_greys)
         # print(self.get_degree_of_similarity(image_cut[0], image_cut[1]))
         return
 
@@ -202,27 +220,16 @@ class CaptchaRecognizer:
             for i in range(int(len(cut_line) / 2) - 1):
                 cut_image_list.append(
                     img[:, (cut_line[2 * i + 1] + 1):cut_line[2 * i + 2]])
-                mpimg.imsave(c.temp_path('cut{0}.png'.format(i + 1)),
-                             img[:,
-                             (cut_line[2 * i + 1] + 1):cut_line[2 * i + 2]],
-                             cmap=_cm_greys)
         else:
             for i in range(int(len(cut_line) / 2)):
                 if i == 0:
                     cut_image_list.append(img[:, 1:cut_line[0]])
-                    mpimg.imsave(c.temp_path('04.cut{0}.png'.format(i + 1)),
-                                 img[:, 1:cut_line[0]], cmap=_cm_greys)
                 else:
                     cut_image_list.append(
                         img[:, (cut_line[2 * i - 1] + 1):cut_line[2 * i]])
-                    mpimg.imsave(c.temp_path('04.cut{0}.png'.format(i + 1)),
-                                 img[:,
-                                 (cut_line[2 * i - 1] + 1):cut_line[2 * i]],
-                                 cmap=_cm_greys)
-                    # for image in cut_image_list:
-                    # resized_image_list.append(
-                    # self.resize_image_to_standard(image)) TODO: bug
-        return cut_image_list
+        for image in cut_image_list:
+            resized_image_list.append(resize_image_to_standard(image,15,30))
+        return resized_image_list
 
     def cut_images_by_floodfill(self, img):
         height, width = img.shape
@@ -265,15 +272,6 @@ class CaptchaRecognizer:
     #                 point_num += 1
     #     return point_num / (width1 * height1 * 1.0)
 
-    # def resize_image_to_standard(self, img):
-    #     if self.width is None or self.length is None:
-    #         raise ValueError("Standard size unknown")
-    #     width, length = img.shape
-    #     if self.width != width:
-    #         raise ValueError("The width of the image is not standard")
-    #     img_resized = img.resize((int(self.width), round(
-    #         self.length / (self.character_num * 1.0) - 2)))  # TODO: bug
-    #     return img_resized
 
     # https://en.wikipedia.org/wiki/Simulated_annealing
     def anneal(self, img, num_steps=500):
