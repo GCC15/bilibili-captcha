@@ -8,8 +8,8 @@ import captcha_source
 
 def main():
     # test_fetch_training_set()
-    test_captcha_recognizing()
-    # dataset_manager.convert_training_image_to_char()
+    # test_captcha_recognizing()
+    dataset_manager.convert_training_image_to_char(force_update=True)
 
 
 def test_fetch_training_set():
