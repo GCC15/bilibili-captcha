@@ -93,6 +93,7 @@ class CaptchaRecognizer:
     def __init__(self):
         # self.length = 0
         # self.width = 0
+        # TODO: tune the tolerance values
         self.h_tolerance = 6 / 360
         self.s_tolerance = 34 / 100
         self.v_tolerance = 60 / 100
@@ -109,19 +110,28 @@ class CaptchaRecognizer:
         mpimg.imsave(c.temp_path('00.origin.png'), img)
 
         # 1
+        t0 = time.time()
         img_01 = self.remove_noise_with_hsv(img)
+        t1 = time.time()
+        print('Time for remove_noise_with_hsv: {}'.format(t1 - t0))
         mpimg.imsave(c.temp_path('01.hsv.png'), img_01, cmap=_cm_greys)
 
         # 2
+        t0 = time.time()
         img_02 = self.remove_noise_with_neighbors(img_01)
         img_02 = self.remove_noise_with_neighbors(img_02)
+        t1 = time.time()
+        print('Time for remove_noise_with_neighbors: {}'.format(t1 - t0))
         mpimg.imsave(c.temp_path('02.neighbor.png'), img_02, cmap=_cm_greys)
 
         # No good.
         # img_02c = ndimage.grey_closing(img_02, footprint=[(0, 0), (0, 1), (1, 0)], mode='constant')
         # mpimg.imsave(c.temp_path('02c.close.png'), img_02c, cmap=_cm_greys)
 
+        t0 = time.time()
         images = self.segment(img_02)
+        t1 = time.time()
+        print('Time for segment: {}'.format(t1 - t0))
         for i in range(len(images)):
             mpimg.imsave(c.temp_path('03.cut{}.png'.format(i + 1)), images[i],
                          cmap=_cm_greys)
@@ -178,6 +188,7 @@ class CaptchaRecognizer:
         # Type C: 0. Inside noise, or background.
         return new_img
 
+    # TODO: how to improve this process?
     # TODO: optimize using vectorized operations
     def remove_noise_with_neighbors(self, img, neighbor_low=0, neighbor_high=7):
         height, width = img.shape
@@ -213,6 +224,7 @@ class CaptchaRecognizer:
         return new_img
 
     def segment(self, img):
+        # Next-nearest neighbors
         struct_nnn = np.ones((3, 3), dtype=int)
         labels, num_labels = ndimage.label(img > 0, structure=struct_nnn)
         print('{} connected components found'.format(num_labels))
