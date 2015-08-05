@@ -116,11 +116,11 @@ class CaptchaRecognizer:
         img_02 = self.remove_noise_with_neighbors(img_02)
         mpimg.imsave(c.temp_path('02.neighbor.png'), img_02, cmap=_cm_greys)
 
-        t0 = time.time()
-        img_02a = self.anneal(img_02)
-        t1 = time.time()
-        print('Annealing time: {}'.format(t1 - t0))
-        mpimg.imsave(c.temp_path('02a.anneal.png'), img_02a)
+        # t0 = time.time()
+        # img_02a = self.anneal(img_02)
+        # t1 = time.time()
+        # print('Annealing time: {}'.format(t1 - t0))
+        # mpimg.imsave(c.temp_path('02a.anneal.png'), img_02a)
 
         # 3
         # img_03f = self.cut_images_by_floodfill(img_02)
@@ -137,7 +137,6 @@ class CaptchaRecognizer:
         return
 
     # Convert to a grayscale image using HSV
-    # TODO: optimize using vectorized operations
     def remove_noise_with_hsv(self, img):
         # Use number of occurrences to find the standard h, s, v
         # Convert to int so we can sort the colors
@@ -147,19 +146,19 @@ class CaptchaRecognizer:
         std_h, std_s, std_v = colors.rgb_to_hsv(_int_to_rgb(std_color))
         # print(std_h * 360, std_s * 100, std_v * 100)
         height, width, _ = img.shape
-        new_img = np.zeros((height, width))
         img_hsv = colors.rgb_to_hsv(img)
-        for y in range(height):
-            for x in range(width):
-                h, s, v = img_hsv[y, x, :]
-                if (abs(h - std_h) <= self.h_tolerance and
-                            abs(s - std_s) <= self.s_tolerance and
-                            abs(v - std_v) <= self.v_tolerance):
-                    delta_v = abs(v - std_v)
-                    if delta_v <= 1e-4:
-                        new_img[y, x] = 1
-                    else:
-                        new_img[y, x] = 1 - delta_v
+        h, s, v = img_hsv[:, :, 0], img_hsv[:, :, 1], img_hsv[:, :, 2]
+        h_mask = abs(h - std_h) > self.h_tolerance
+        s_mask = abs(s - std_s) > self.s_tolerance
+        delta_v = abs(v - std_v)
+        v_mask = delta_v > self.v_tolerance
+        hsv_mask = np.logical_or(
+            np.logical_or(
+                h_mask, s_mask
+            ), v_mask
+        )
+        new_img = 1 - delta_v
+        new_img[hsv_mask] = 0
         # Three types of grayscale colors in new_img:
         # Type A: 1. Outside noise, or inside point.
         # Type B: between 0 and 1. Outside noise, or contour point.
