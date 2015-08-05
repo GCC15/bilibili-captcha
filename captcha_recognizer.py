@@ -162,7 +162,11 @@ class CaptchaRecognizer:
     def remove_noise_with_hsv(self, img):
         # Use number of occurrences to find the standard h, s, v
         # Convert to int so we can sort the colors
+        t0 = time.time()
+        # TODO: this is too slow! optimize
         img_int = np.apply_along_axis(_rgb_to_int, 2, img)
+        t1 = time.time()
+        print('_rgb_to_int: {}'.format(t1 - t0))
         color_array = _sort_by_occurrence(img_int.flatten())
         # 2nd most frequent
         std_color = color_array[1]
