@@ -32,6 +32,8 @@ The Python program attempts to recognize [CAPTCHA images](http://www.bilibili.co
 
 [Recognizing objects in adversarial clutter: breaking a visual captcha](http://dl.acm.org/citation.cfm?id=1965858)
 
+[Scikit-image: image processing](http://scipy-lectures.github.io/packages/scikit-image/)
+
 [Using AI to beat CAPTCHA and post comment spam](http://www.brains-n-brawn.com/default.aspx?vDir=aicaptcha)
 
 # License
