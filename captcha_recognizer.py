@@ -6,6 +6,8 @@ import matplotlib.colors as colors
 import matplotlib.image as mpimg
 import numpy as np
 import numpy.linalg as la
+import scipy as sp
+import scipy.misc
 import config as c
 import os
 
@@ -73,17 +75,17 @@ def resize_image_to_standard(img, width, height):
     img_height, img_width = img.shape
     if img_height != height:
         raise ValueError('The height of the image is not standard')
-    mpimg.imsave(c.temp_path('temp.png'), img, cmap=_cm_greys)
-    img_pillow = Image.open(c.temp_path('temp.png'))
-    img_pillow = img_pillow.convert('1')
-    img_pillow.resize((width, height), Image.BILINEAR).save(
-        c.temp_path('temp1.png'))
-    img_plt = mpimg.imread(c.temp_path('temp1.png'))
-    mpimg.imsave(c.temp_path('temp2.png'), img_plt, cmap=_cm_greys)
-    os.remove(c.temp_path('temp.png'))
-    os.remove(c.temp_path('temp1.png'))
-    os.remove(c.temp_path('temp2.png'))
-    return img_plt
+    # mpimg.imsave(c.temp_path('temp.png'), img, cmap=_cm_greys)
+    # img_pillow = Image.open(c.temp_path('temp.png'))
+    # img_pillow = img_pillow.convert('1')
+    # img_pillow.resize((width, height), Image.BILINEAR).save(
+    #     c.temp_path('temp1.png'))
+    # img_plt = mpimg.imread(c.temp_path('temp1.png'))
+    # mpimg.imsave(c.temp_path('temp2.png'), img_plt, cmap=_cm_greys)
+    # os.remove(c.temp_path('temp.png'))
+    # os.remove(c.temp_path('temp1.png'))
+    # os.remove(c.temp_path('temp2.png'))
+    return sp.misc.imresize(img, (height, width))
 
 
 class CaptchaRecognizer:
@@ -135,6 +137,7 @@ class CaptchaRecognizer:
         return
 
     # Convert to a grayscale image using HSV
+    # TODO: optimize using vectorized operations
     def remove_noise_with_hsv(self, img):
         # Use number of occurrences to find the standard h, s, v
         # Convert to int so we can sort the colors
@@ -163,6 +166,7 @@ class CaptchaRecognizer:
         # Type C: 0. Inside noise, or background.
         return new_img
 
+    # TODO: optimize using vectorized operations
     def remove_noise_with_neighbors(self, img, neighbor_low=0, neighbor_high=7):
         height, width = img.shape
         new_img = img.copy()
@@ -200,15 +204,15 @@ class CaptchaRecognizer:
         sep_line_list = []
         sep_line_list_final = []
         new_img = img.copy()
-        Y, X = img.shape
-        for x in range(X):
-            if np.count_nonzero(img[:, x]) / Y < self.sep_constant:
+        height, width = img.shape
+        for x in range(width):
+            if np.count_nonzero(img[:, x]) / height < self.sep_constant:
                 sep_line_list.append(x)
                 new_img[:, x] = 0.5
         for i in range(len(sep_line_list)):
-            if i == 0 or sep_line_list[i] == (X - 1) or sep_line_list[i] - \
+            if i == 0 or sep_line_list[i] == (width - 1) or sep_line_list[i] - \
                     sep_line_list[i - 1] != 1:
-                if i != 0 and sep_line_list[i] != (X - 1):
+                if i != 0 and sep_line_list[i] != (width - 1):
                     sep_line_list_final.append(sep_line_list[i - 1])
                 sep_line_list_final.append(sep_line_list[i])
         return [new_img, sep_line_list_final]

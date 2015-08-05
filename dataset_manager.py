@@ -139,8 +139,12 @@ def get_test_images(num=1):
     return _get_images(test_set_dir, num)
 
 
-def get_training_image(seq):
-    return _get_image(training_set_dir, _add_suffix(seq))
+# Return a training image randomly if seq is None
+def get_training_image(seq=None):
+    if seq is None:
+        return get_training_images(1)[0]
+    else:
+        return _get_image(training_set_dir, _add_suffix(seq))
 
 
 def get_training_images(num=1):
