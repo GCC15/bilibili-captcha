@@ -1,4 +1,4 @@
-from PIL import Image
+# from PIL import Image
 import random
 import time
 import matplotlib.pyplot as plt
@@ -8,6 +8,7 @@ import numpy as np
 import numpy.linalg as la
 import scipy as sp
 import scipy.misc
+import scipy.ndimage as ndimage
 import config as c
 import os
 
@@ -116,6 +117,17 @@ class CaptchaRecognizer:
         img_02 = self.remove_noise_with_neighbors(img_02)
         mpimg.imsave(c.temp_path('02.neighbor.png'), img_02, cmap=_cm_greys)
 
+        # No good.
+        # img_02c = ndimage.grey_closing(img_02, footprint=[(0, 0), (0, 1), (1, 0)], mode='constant')
+        # mpimg.imsave(c.temp_path('02c.close.png'), img_02c, cmap=_cm_greys)
+
+        images = self.segment(img_02)
+        for i in range(len(images)):
+            mpimg.imsave(c.temp_path('03.cut{}.png'.format(i + 1)), images[i],
+                         cmap=_cm_greys)
+
+        return
+
         # t0 = time.time()
         # img_02a = self.anneal(img_02)
         # t1 = time.time()
@@ -125,14 +137,14 @@ class CaptchaRecognizer:
         # 3
         # img_03f = self.cut_images_by_floodfill(img_02)
 
-        img_03v, cut_line = self.find_vertical_separation_line(img_02)
-        mpimg.imsave(c.temp_path('03v.separate.png'), img_03v, cmap=_cm_greys)
+        # img_03v, cut_line = self.find_vertical_separation_line(img_02)
+        # mpimg.imsave(c.temp_path('03v.separate.png'), img_03v, cmap=_cm_greys)
 
         # 4
-        image_cut = self.cut_images_by_vertical_line(img_02, cut_line)
-        for i in range(len(image_cut)):
-            mpimg.imsave(c.temp_path('04cut{0}.png'.format(i + 1)),
-                         image_cut[i], cmap=_cm_greys)
+        # image_cut = self.cut_images_by_vertical_line(img_02, cut_line)
+        # for i in range(len(image_cut)):
+        #     mpimg.imsave(c.temp_path('04.cut{0}.png'.format(i + 1)),
+        #                  image_cut[i], cmap=_cm_greys)
         # print(self.get_degree_of_similarity(image_cut[0], image_cut[1]))
         return
 
@@ -142,15 +154,16 @@ class CaptchaRecognizer:
         # Convert to int so we can sort the colors
         img_int = np.apply_along_axis(_rgb_to_int, 2, img)
         color_array = _sort_by_occurrence(img_int.flatten())
+        # 2nd most frequent
         std_color = color_array[1]
         std_h, std_s, std_v = colors.rgb_to_hsv(_int_to_rgb(std_color))
         # print(std_h * 360, std_s * 100, std_v * 100)
         height, width, _ = img.shape
         img_hsv = colors.rgb_to_hsv(img)
         h, s, v = img_hsv[:, :, 0], img_hsv[:, :, 1], img_hsv[:, :, 2]
-        h_mask = abs(h - std_h) > self.h_tolerance
-        s_mask = abs(s - std_s) > self.s_tolerance
-        delta_v = abs(v - std_v)
+        h_mask = np.abs(h - std_h) > self.h_tolerance
+        s_mask = np.abs(s - std_s) > self.s_tolerance
+        delta_v = np.abs(v - std_v)
         v_mask = delta_v > self.v_tolerance
         hsv_mask = np.logical_or(
             np.logical_or(
@@ -199,6 +212,15 @@ class CaptchaRecognizer:
                     new_img[y, x] = sum_color / 8
         return new_img
 
+    def segment(self, img):
+        struct_nnn = np.ones((3, 3), dtype=int)
+        labels, num_labels = ndimage.label(img > 0, structure=struct_nnn)
+        print('{} connected components found'.format(num_labels))
+        # np.savetxt(c.temp_path('labels.txt'), labels, fmt='%d')
+        mpimg.imsave(c.temp_path('segment.png'), labels)
+        object_slices = ndimage.find_objects(labels)
+        return [img[object_slice] for object_slice in object_slices]
+
     def find_vertical_separation_line(self, img):
         sep_line_list = []
         sep_line_list_final = []
@@ -236,7 +258,7 @@ class CaptchaRecognizer:
                         img[:, (cut_line[2 * i - 1] + 1):cut_line[2 * i]])
         for image in cut_image_list:
             resized_image_list.append(resize_image_to_standard(image,
-                                            round(width/5 - 7), 30))
+                                                               round(width / 5 - 7), 30))
         return resized_image_list
 
     def cut_images_by_floodfill(self, img):
