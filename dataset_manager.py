@@ -231,6 +231,7 @@ def partition_training_images_to_chars(force_update=False):
     print('Total: {}'.format(num_total))
     print('Update: {}'.format(num_update))
     print('Success: {}'.format(num_success))
+    print('Success rate is: {}'.format(num_success/(num_total*1.0)))
     time_end = time.time()
     print('Elapsed time: {}'.format(time_end - time_start))
 
