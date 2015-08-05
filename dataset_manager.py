@@ -204,17 +204,18 @@ def partition_training_images_to_chars(force_update=False):
         seq = _remove_suffix(filename)
         print('{}/{}: {}'.format(n, num_update, seq))
         img = get_training_image(seq)
-        img_01 = recognizer.remove_noise_with_hsv(img)
-        img_02 = recognizer.remove_noise_with_neighbors(img_01)
-        img_02 = recognizer.remove_noise_with_neighbors(img_02)
-        _, cut_line = recognizer.find_vertical_separation_line(img_02)
-        img_list = recognizer.cut_images_by_vertical_line(img_02, cut_line)
-        if len(img_list) == captcha_source.captcha_length:
+        char_images = recognizer.partition(img)
+        # img_01 = recognizer.remove_noise_with_hsv(img)
+        # img_02 = recognizer.remove_noise_with_neighbors(img_01)
+        # img_02 = recognizer.remove_noise_with_neighbors(img_02)
+        # _, cut_line = recognizer.find_vertical_separation_line(img_02)
+        # img_list = recognizer.cut_images_by_vertical_line(img_02, cut_line)
+        if char_images is not None:
             success_list.append(filename)
             num_success += 1
-            for i in range(len(img_list)):
+            for i in range(len(char_images)):
                 path = char_path(seq[i], _add_suffix('{}.{}'.format(seq, i + 1)))
-                mpimg.imsave(path, img_list[i], cmap=_cm_greys)
+                mpimg.imsave(path, char_images[i], cmap=_cm_greys)
         else:
             fail_list.append(filename)
     success_list.sort()

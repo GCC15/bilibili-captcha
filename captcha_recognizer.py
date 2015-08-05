@@ -1,4 +1,6 @@
 # from PIL import Image
+import config as c
+import captcha_source
 import random
 import time
 import matplotlib.pyplot as plt
@@ -8,9 +10,11 @@ import numpy as np
 import numpy.linalg as la
 import scipy as sp
 import scipy.misc
-import scipy.ndimage as ndimage
-import config as c
-import os
+from scipy import ndimage
+
+
+# import skimage.morphology as morph
+# import skimage.segmentation as seg
 
 
 # https://en.wikipedia.org/wiki/Lennard-Jones_potential
@@ -72,10 +76,10 @@ def _show_image(img, cmap=_cm_greys, title=None):
 
 
 # Resize characters to another shape
-def resize_image_to_standard(img, width, height):
-    img_height, img_width = img.shape
-    if img_height != height:
-        raise ValueError('The height of the image is not standard')
+def _resize_image_to_standard(img, width, height):
+    # img_height, img_width = img.shape
+    # if img_height != height:
+    #     raise ValueError('The height of the image is not standard')
     # mpimg.imsave(c.temp_path('temp.png'), img, cmap=_cm_greys)
     # img_pillow = Image.open(c.temp_path('temp.png'))
     # img_pillow = img_pillow.convert('1')
@@ -91,52 +95,88 @@ def resize_image_to_standard(img, width, height):
 
 class CaptchaRecognizer:
     def __init__(self):
-        # self.length = 0
-        # self.width = 0
         # TODO: tune the tolerance values
         self.h_tolerance = 6 / 360
         self.s_tolerance = 34 / 100
         self.v_tolerance = 60 / 100
-        # self.neighbor_low = 0
-        # self.neighbor_high = 5
         self.sep_constant = 0.03  # this means all in one column must be
         # white, if set to 0.04, bad for 'QN4EL'
-        self.character_num = 5
+        self.character_num = captcha_source.captcha_length
+        # TODO: adjust the values below
+        self.char_width_std = 15
+        self.char_height_std = 30
+        self.char_width_min = 5
+        self.char_width_max = 30
+        self.char_height_min = 15
+        self.char_height_max = 30
 
-    def recognize(self, img):
-        # width, length, _ = img.shape
-        # self.width = width
-        # self.length = length
-        mpimg.imsave(c.temp_path('00.origin.png'), img)
+    # Try to partition a CAPTCHA into each char image
+    # save_intermediate: whether I should save intermediate images
+    def partition(self, img, save_intermediate=False, verbose=False):
+        if save_intermediate:
+            mpimg.imsave(c.temp_path('00.origin.png'), img)
 
         # 1
         t0 = time.time()
         img_01 = self.remove_noise_with_hsv(img)
         t1 = time.time()
-        print('Time for remove_noise_with_hsv: {}'.format(t1 - t0))
-        mpimg.imsave(c.temp_path('01.hsv.png'), img_01, cmap=_cm_greys)
+        if verbose:
+            print('Time for remove_noise_with_hsv: {}'.format(t1 - t0))
+        if save_intermediate:
+            mpimg.imsave(c.temp_path('01.hsv.png'), img_01, cmap=_cm_greys)
 
         # 2
         t0 = time.time()
         img_02 = self.remove_noise_with_neighbors(img_01)
         img_02 = self.remove_noise_with_neighbors(img_02)
         t1 = time.time()
-        print('Time for remove_noise_with_neighbors: {}'.format(t1 - t0))
-        mpimg.imsave(c.temp_path('02.neighbor.png'), img_02, cmap=_cm_greys)
+        if verbose:
+            print('Time for remove_noise_with_neighbors: {}'.format(t1 - t0))
+        if save_intermediate:
+            mpimg.imsave(c.temp_path('02.neighbor.png'), img_02, cmap=_cm_greys)
 
-        # No good.
-        # img_02c = ndimage.grey_closing(img_02, footprint=[(0, 0), (0, 1), (1, 0)], mode='constant')
-        # mpimg.imsave(c.temp_path('02c.close.png'), img_02c, cmap=_cm_greys)
-
+        # 3
         t0 = time.time()
-        images = self.segment(img_02)
+        labels, object_slices = self.segment_with_label(img_02)
         t1 = time.time()
-        print('Time for segment: {}'.format(t1 - t0))
-        for i in range(len(images)):
-            mpimg.imsave(c.temp_path('03.cut{}.png'.format(i + 1)), images[i],
-                         cmap=_cm_greys)
+        if save_intermediate:
+            mpimg.imsave(c.temp_path('03.00000.png'), labels)
+        if verbose:
+            print('Time for segment: {}'.format(t1 - t0))
+            print('{} connected components found'.format(len(object_slices)))
+        # Arrange the segments from left to right
+        xmin_arr = np.array(
+            [object_slice[1].start for object_slice in object_slices]
+        )
+        char_images = [img_02[object_slices[i]] for i in xmin_arr.argsort()]
 
-        return
+        # Check if segmentation was successful
+        if len(char_images) == self.character_num:
+            shapes = np.array(list(map(np.shape, char_images)))
+            heights, widths = shapes[:, 0], shapes[:, 1]
+            if verbose:
+                print('Heights {}'.format(heights))
+                print('Widths {}'.format(widths))
+            if (np.all(heights >= self.char_height_min) and
+                    np.all(heights <= self.char_height_max) and
+                    np.all(widths >= self.char_width_min) and
+                    np.all(widths <= self.char_width_max)):
+                def resize(char_image):
+                    return _resize_image_to_standard(
+                        char_image,
+                        self.char_width_std,
+                        self.char_height_std
+                    )
+
+                char_images = list(map(resize, char_images))
+                if save_intermediate:
+                    for i in range(len(char_images)):
+                        mpimg.imsave(c.temp_path('03.char.{}.png'.format(i + 1)),
+                                     char_images[i], cmap=_cm_greys)
+                return char_images
+        if verbose:
+            print('Warning: partition failed')
+        return None
 
         # t0 = time.time()
         # img_02a = self.anneal(img_02)
@@ -156,17 +196,27 @@ class CaptchaRecognizer:
         #     mpimg.imsave(c.temp_path('04.cut{0}.png'.format(i + 1)),
         #                  image_cut[i], cmap=_cm_greys)
         # print(self.get_degree_of_similarity(image_cut[0], image_cut[1]))
+
+    def recognize(self, img, save_intermediate=False, verbose=False):
+        char_images = self.partition(
+            img,
+            save_intermediate=save_intermediate,
+            verbose=verbose
+        )
+
+        # TODO: hand over to the neural network
+
         return
 
     # Convert to a grayscale image using HSV
     def remove_noise_with_hsv(self, img):
         # Use number of occurrences to find the standard h, s, v
         # Convert to int so we can sort the colors
-        t0 = time.time()
-        # TODO: this is too slow! optimize
+        # t0 = time.time()
+        # TODO: this line is too slow! optimize
         img_int = np.apply_along_axis(_rgb_to_int, 2, img)
-        t1 = time.time()
-        print('_rgb_to_int: {}'.format(t1 - t0))
+        # t1 = time.time()
+        # print('_rgb_to_int: {}'.format(t1 - t0))
         color_array = _sort_by_occurrence(img_int.flatten())
         # 2nd most frequent
         std_color = color_array[1]
@@ -227,15 +277,13 @@ class CaptchaRecognizer:
                     new_img[y, x] = sum_color / 8
         return new_img
 
-    def segment(self, img):
+    def segment_with_label(self, img):
         # Next-nearest neighbors
         struct_nnn = np.ones((3, 3), dtype=int)
         labels, num_labels = ndimage.label(img > 0, structure=struct_nnn)
-        print('{} connected components found'.format(num_labels))
         # np.savetxt(c.temp_path('labels.txt'), labels, fmt='%d')
-        mpimg.imsave(c.temp_path('segment.png'), labels)
         object_slices = ndimage.find_objects(labels)
-        return [img[object_slice] for object_slice in object_slices]
+        return labels, object_slices
 
     def find_vertical_separation_line(self, img):
         sep_line_list = []
@@ -273,8 +321,8 @@ class CaptchaRecognizer:
                     cut_image_list.append(
                         img[:, (cut_line[2 * i - 1] + 1):cut_line[2 * i]])
         for image in cut_image_list:
-            resized_image_list.append(resize_image_to_standard(image,
-                                                               round(width / 5 - 7), 30))
+            resized_image_list.append(_resize_image_to_standard(image,
+                                                                round(width / 5 - 7), 30))
         return resized_image_list
 
     def cut_images_by_floodfill(self, img):

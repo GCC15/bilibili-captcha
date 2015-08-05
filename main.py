@@ -8,8 +8,8 @@ import captcha_source
 
 def main():
     # test_fetch_training_set()
-    test_captcha_recognizing()
-    # dataset_manager.partition_training_images_to_chars(force_update=True)
+    # test_captcha_recognizing()
+    dataset_manager.partition_training_images_to_chars(force_update=True)
 
 
 def test_fetch_training_set():
@@ -25,7 +25,7 @@ def test_captcha_recognizing():
     # image = dataset_manager.get_training_image('QN4EL')
     # image = dataset_manager.get_training_image('WMQPQ')
     # image = dataset_manager.get_training_image('XMEJ1')
-    CaptchaRecognizer().recognize(image)
+    CaptchaRecognizer().recognize(image, save_intermediate=True, verbose=True)
 
 
 if __name__ == '__main__':
