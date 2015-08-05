@@ -1,4 +1,3 @@
-# from PIL import Image
 import config as c
 import captcha_source
 import random
@@ -77,19 +76,6 @@ def _show_image(img, cmap=_cm_greys, title=None):
 
 # Resize characters to another shape
 def _resize_image_to_standard(img, width, height):
-    # img_height, img_width = img.shape
-    # if img_height != height:
-    #     raise ValueError('The height of the image is not standard')
-    # mpimg.imsave(c.temp_path('temp.png'), img, cmap=_cm_greys)
-    # img_pillow = Image.open(c.temp_path('temp.png'))
-    # img_pillow = img_pillow.convert('1')
-    # img_pillow.resize((width, height), Image.BILINEAR).save(
-    #     c.temp_path('temp1.png'))
-    # img_plt = mpimg.imread(c.temp_path('temp1.png'))
-    # mpimg.imsave(c.temp_path('temp2.png'), img_plt, cmap=_cm_greys)
-    # os.remove(c.temp_path('temp.png'))
-    # os.remove(c.temp_path('temp1.png'))
-    # os.remove(c.temp_path('temp2.png'))
     return sp.misc.imresize(img, (height, width))
 
 
@@ -171,8 +157,9 @@ class CaptchaRecognizer:
                 char_images = list(map(resize, char_images))
                 if save_intermediate:
                     for i in range(len(char_images)):
-                        mpimg.imsave(c.temp_path('03.char.{}.png'.format(i + 1)),
-                                     char_images[i], cmap=_cm_greys)
+                        mpimg.imsave(
+                            c.temp_path('03.char.{}.png'.format(i + 1)),
+                            char_images[i], cmap=_cm_greys)
                 return char_images
         if verbose:
             print('Warning: partition failed')
@@ -191,7 +178,6 @@ class CaptchaRecognizer:
         # mpimg.imsave(c.temp_path('03v.separate.png'), img_03v, cmap=_cm_greys)
 
         # 4
-        # image_cut = self.cut_images_by_vertical_line(img_02, cut_line)
         # for i in range(len(image_cut)):
         #     mpimg.imsave(c.temp_path('04.cut{0}.png'.format(i + 1)),
         #                  image_cut[i], cmap=_cm_greys)
@@ -302,29 +288,6 @@ class CaptchaRecognizer:
                 sep_line_list_final.append(sep_line_list[i])
         return [new_img, sep_line_list_final]
 
-    def cut_images_by_vertical_line(self, img, cut_line):
-        _, width = img.shape
-        cut_image_list = []
-        resized_image_list = []
-        # print(cut_line)
-        if len(cut_line) > 2 * (self.character_num + 1):
-            print("Abnormal, the image will be cut into more than 5 pieces")
-        if cut_line[0] == 0:
-            for i in range(int(len(cut_line) / 2) - 1):
-                cut_image_list.append(
-                    img[:, (cut_line[2 * i + 1] + 1):cut_line[2 * i + 2]])
-        else:
-            for i in range(int(len(cut_line) / 2)):
-                if i == 0:
-                    cut_image_list.append(img[:, 1:cut_line[0]])
-                else:
-                    cut_image_list.append(
-                        img[:, (cut_line[2 * i - 1] + 1):cut_line[2 * i]])
-        for image in cut_image_list:
-            resized_image_list.append(_resize_image_to_standard(image,
-                                                                round(width / 5 - 7), 30))
-        return resized_image_list
-
     def cut_images_by_floodfill(self, img):
         height, width = img.shape
         aux_list = []
@@ -346,26 +309,12 @@ class CaptchaRecognizer:
                     y, x - 1) not in region_point:
                 aux_list.append((y, x + 1))
             if y + 1 < height and img[y + 1, x] == 1 and (
-                        y + 1, x) not in region_point:
+                    y + 1, x) not in region_point:
                 aux_list.append((y + 1, x))
             if y - 1 >= 0 and img[y - 1, x] == 1 and (
-                        y - 1, x) not in region_point:
+                    y - 1, x) not in region_point:
                 aux_list.append((y - 1, x))
         print(region_point)
-
-    # Requires two images to be of the same size and both black / white
-    # def get_degree_of_similarity(self, img1, img2):
-    #     height1, width1 = img1.shape
-    #     height2, width2 = img2.shape
-    #     if width1 != width2 or height1 != height2:
-    #         raise ValueError("Two images of different size are compared")
-    #     point_num = 0
-    #     for x in range(width1):
-    #         for y in range(height1):
-    #             if img1[y, x].all() == img2[y, x].all():
-    #                 point_num += 1
-    #     return point_num / (width1 * height1 * 1.0)
-
 
     # https://en.wikipedia.org/wiki/Simulated_annealing
     def anneal(self, img, num_steps=500):
