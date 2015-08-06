@@ -197,7 +197,7 @@ def partition_training_images_to_chars(force_update=False):
     num_total = len(filenames)
     filenames = list(filter(filename_filter, filenames))
     num_update = len(filenames)
-    num_success = 0
+    num_update_success = 0
     recognizer = CaptchaRecognizer()
     for n in range(num_update):
         filename = filenames[n]
@@ -212,12 +212,13 @@ def partition_training_images_to_chars(force_update=False):
         # img_list = recognizer.cut_images_by_vertical_line(img_02, cut_line)
         if char_images is not None:
             success_list.append(filename)
-            num_success += 1
+            num_update_success += 1
             for i in range(len(char_images)):
                 path = char_path(seq[i], _add_suffix('{}.{}'.format(seq, i + 1)))
                 mpimg.imsave(path, char_images[i], cmap=_cm_greys)
         else:
             fail_list.append(filename)
+    num_total_success = len(success_list)
     success_list.sort()
     fail_list.sort()
     json.dump(
@@ -228,10 +229,13 @@ def partition_training_images_to_chars(force_update=False):
         open(_PARTITION_JSON, 'w'),
         indent=2
     )
-    print('Total: {}'.format(num_total))
     print('Update: {}'.format(num_update))
-    print('Success: {}'.format(num_success))
-    print('Success rate is: {}'.format(num_success/(num_total*1.0)))
+    print('Update success: {}'.format(num_update_success))
+    print('Update success rate is: {}'.format(num_update_success/(num_update*1.0)))
+    print('Total: {}'.format(num_total))
+    print('Total success: {}'.format(num_total_success))
+    print('Total success rate is: {}'.format(num_total_success/(num_total*1.0)))
+
     time_end = time.time()
     print('Elapsed time: {}'.format(time_end - time_start))
 
