@@ -14,6 +14,7 @@ import gzip
 # http://yann.lecun.com/exdb/publis/pdf/lecun-98b.pdf
 # http://yann.lecun.com/exdb/mnist/
 
+
 class LogisticRegression(object):
     """Multi-class Logistic Regression Class
 
@@ -32,7 +33,7 @@ class LogisticRegression(object):
 
         :type n_in: int
         :param n_in: number of input units, the dimension of the space in
-                     which the datapoints lie
+                     which the data points lie
 
         :type n_out: int
         :param n_out: number of output units, the dimension of the space in
@@ -163,7 +164,7 @@ class HiddenLayer(object):
         """
         self.input = input
 
-        # `W` is initialized with `W_values` which is uniformely sampled
+        # `W` is initialized with `W_values` which is uniformly sampled
         # from sqrt(-6./(n_in+n_hidden)) and sqrt(6./(n_in+n_hidden))
         # for tanh activation function
         # the output of uniform if converted using asarray to dtype
@@ -312,8 +313,8 @@ def test_mlp(datasets, learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001, n_epochs=
     :type n_epochs: int
     :param n_epochs: maximal number of epochs to run the optimizer
 
-    :type dataset: list
-    :param dataset: a list of matrix,
+    :type datasets: list
+    :param datasets: a list of matrix,
 
    """
     train_set_x, train_set_y = datasets[0]
