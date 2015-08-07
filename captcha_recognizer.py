@@ -235,38 +235,33 @@ class CaptchaRecognizer:
         return new_img
 
     # TODO: how to improve this process?
-    # TODO: optimize using vectorized operations
     def remove_noise_with_neighbors(self, img, neighbor_low=0, neighbor_high=7):
         height, width = img.shape
+        pad_shape = height + 2, width + 2
+        img_pad_sum = np.zeros(pad_shape)
+        img_pad_a = np.zeros(pad_shape)
+        img_pad_b = np.zeros(pad_shape)
+        neighbors = [-1, 0, 1]
+        for dy in neighbors:
+            for dx in neighbors:
+                if dy == 0 and dx == 0:
+                    continue
+                s = (slice(dy + 1, dy - 1 if dy - 1 else None),
+                     slice(dx + 1, dx - 1 if dx - 1 else None))
+                # print(s)
+                img_pad_sum[s] += img
+                img_pad_a[s] += img == 1
+                img_pad_b[s] += np.logical_and(img > 0, img < 1)
+        # Remove padding
+        s = [slice(1, -1)] * 2
+        img_pad_sum = img_pad_sum[s]
+        img_pad_a = img_pad_a[s]
+        img_pad_b = img_pad_b[s]
         new_img = img.copy()
-        for y in range(height):
-            for x in range(width):
-                num_a = 0
-                num_b = 0
-                sum_color = 0
-                for dy in range(-1, 2):
-                    for dx in range(-1, 2):
-                        if dy == 0 and dx == 0:
-                            continue
-                        y_neighbor = y + dy
-                        if y_neighbor < 0 or y_neighbor >= height:
-                            continue
-                        x_neighbor = x + dx
-                        if x_neighbor < 0 or x_neighbor >= width:
-                            continue
-                        color = img[y_neighbor, x_neighbor]
-                        sum_color += color
-                        if color == 1:
-                            num_a += 1
-                        elif color > 0:
-                            num_b += 1
-                if img[y, x] * 2 > sum_color:
-                    new_img[y, x] = 0
-                elif img[y, x] > 0:
-                    if num_a <= neighbor_low:
-                        new_img[y, x] = 0
-                elif num_a + num_b >= neighbor_high:
-                    new_img[y, x] = sum_color / 8
+        mask = np.logical_and(img == 0, img_pad_a + img_pad_b >= neighbor_high)
+        new_img[mask] = img_pad_sum[mask] / 8
+        new_img[img * 2 > img_pad_sum] = 0
+        new_img[img_pad_a <= neighbor_low] = 0
         return new_img
 
     def segment_with_label(self, img):
