@@ -12,6 +12,8 @@ import numpy.linalg as la
 import scipy as sp
 import scipy.misc
 from scipy import ndimage
+
+
 # import skimage.morphology as morph
 # import skimage.segmentation as seg
 
@@ -169,24 +171,6 @@ class CaptchaRecognizer:
         if verbose:
             print('Warning: partition failed!')
         return None
-
-        # t0 = time.time()
-        # img_02a = self.anneal(img_02)
-        # t1 = time.time()
-        # print('Annealing time: {}'.format(t1 - t0))
-        # mpimg.imsave(c.temp_path('02a.anneal.png'), img_02a)
-
-        # 3
-        # img_03f = self.cut_images_by_floodfill(img_02)
-
-        # img_03v, cut_line = self.find_vertical_separation_line(img_02)
-        # mpimg.imsave(c.temp_path('03v.separate.png'), img_03v, cmap=_cm_greys)
-
-        # 4
-        # for i in range(len(image_cut)):
-        #     mpimg.imsave(c.temp_path('04.cut{0}.png'.format(i + 1)),
-        #                  image_cut[i], cmap=_cm_greys)
-        # print(self.get_degree_of_similarity(image_cut[0], image_cut[1]))
 
     def recognize(self, img, save_intermediate=False, verbose=False):
         char_images = self.partition(img, save_intermediate, verbose)

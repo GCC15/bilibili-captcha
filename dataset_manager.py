@@ -10,7 +10,6 @@ import captcha_source
 import config as c
 from captcha_recognizer import CaptchaRecognizer
 
-
 _cm_greys = plt.cm.get_cmap('Greys')
 _png = '.png'
 
@@ -180,18 +179,6 @@ def _list_seq(directory):
     return list(map(_remove_suffix, _list_png(directory)))
 
 
-# def _list_unconverted_seq(directory):
-#     return list(
-#         map(_remove_suffix, _list_unconverted_png(directory)))
-
-
-# def _convert_all_training_png_to_original_name():
-#     png_list = _list_png(c.training_set_dir)
-#     for i in range(len(png_list)):
-#         os.rename(os.path.join(c.training_set_dir, png_list[i]),
-#                   os.path.join(c.training_set_dir, (png_list[i][0:5] + '.png')))
-
-
 def partition_training_images_to_chars(force_update=False):
     time_start = time.time()
     try:
@@ -253,14 +240,16 @@ def partition_training_images_to_chars(force_update=False):
     print('Update: {}'.format(num_update))
     print('Update success: {}'.format(num_update_success))
     if num_update:
-        print('Update success rate is: {}'.format(num_update_success / num_update))
+        print('Update success rate is: {}'.format(
+            num_update_success / num_update))
 
     print('Total: {}'.format(num_total))
     print('Total success: {}'.format(num_total_success))
     print('Total success rate is: {}'.format(total_success_rate))
 
     time_end = time.time()
-    print('Elapsed time: {}'.format(time_end - time_start))
+    print('Elapsed time of partitioning training images: {}'.format(
+        time_end - time_start))
 
 
 if __name__ == '__main__':
