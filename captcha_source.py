@@ -7,6 +7,7 @@ import matplotlib.image as mpimg
 captcha_length = 5
 #       'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
 chars = '    EFGH JKLMN PQR TUVWXY  123456 89'.replace(' ', '')
+charset = set(chars)
 
 
 def _get_captcha_url(use_https=False):

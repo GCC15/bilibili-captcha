@@ -11,11 +11,9 @@ import numpy as np
 import numpy.linalg as la
 import scipy as sp
 import scipy.misc
-from scipy import ndimage
-
-
 # import skimage.morphology as morph
 # import skimage.segmentation as seg
+from scipy import ndimage
 
 
 # A generic function timer
@@ -107,7 +105,6 @@ class CaptchaRecognizer:
 
     # Try to partition a CAPTCHA into each char image
     # save_intermediate: whether I should save intermediate images
-    # noinspection PyUnboundLocalVariable
     def partition(self, img, save_intermediate=False, verbose=False):
         if save_intermediate:
             mpimg.imsave(c.temp_path('00.origin.png'), img)

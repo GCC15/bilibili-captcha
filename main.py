@@ -7,25 +7,33 @@ import captcha_source
 
 
 def main():
-    # test_fetch_training_set()
-    test_captcha_recognizing()
+    # dataset_manager.fetch_training_set(70)
+    test_captcha_recognition()
     # dataset_manager.partition_training_images_to_chars()
     # dataset_manager.partition_training_images_to_chars(force_update=True)
 
 
-def test_fetch_training_set():
-    dataset_manager.fetch_training_set(70)
-
-
-def test_captcha_recognizing():
+def test_captcha_recognition():
     c.clear_temp()
-    # image = captcha_source.fetch_image()
-    image = dataset_manager.get_training_image()
-    # image = dataset_manager.get_training_image('J11L2')
-    # image = dataset_manager.get_training_image('EQEJU')
-    # image = dataset_manager.get_training_image('QN4EL')
-    # image = dataset_manager.get_training_image('WMQPQ')
-    # image = dataset_manager.get_training_image('XMEJ1')
+    seq = None
+
+    # Sticking together
+    # seq = 'WMQPQ'
+    # seq = '14FWX'
+    # seq = '4TJ3R'
+    # seq = '5PW9Y'
+    # seq = '6ML6X'
+    # seq = '48HXH'
+    # seq = 'Y581K'
+
+    # Isolation
+    # seq = 'QN4EL'
+
+    # Complicated
+    # seq = '2XML9'
+    # seq = 'W9WU4'
+
+    image = dataset_manager.get_training_image(seq)
     CaptchaRecognizer().recognize(image, save_intermediate=True, verbose=True)
 
 

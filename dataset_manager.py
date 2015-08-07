@@ -27,9 +27,11 @@ _NUM_CHAR = '#{}'
 _FAIL = 'fail'
 _SUCCESS = 'success'
 
+_SEQ_SKIP = '0'
+
 
 def _contain_invalid_char(seq):
-    return any(char not in captcha_source.chars for char in seq)
+    return any(char not in captcha_source.charset for char in seq)
 
 
 def _get_training_char_dir(char):
@@ -65,11 +67,12 @@ def _fetch_captchas_to_dir(directory, num=1, use_https=False):
         # https://github.com/matplotlib/matplotlib/issues/1646/
         plt.show()
         plt.pause(1e-2)
+
         while True:
             seq = input('[{}] Enter the char sequence: '.format(i))
             # To skip a CAPTCHA.
             # Warning: skipping may reduce the quality of the training set.
-            if seq == '0':
+            if seq == _SEQ_SKIP:
                 break
             seq = captcha_source.canonicalize(seq)
             if (len(seq) != captcha_source.captcha_length or
@@ -77,14 +80,14 @@ def _fetch_captchas_to_dir(directory, num=1, use_https=False):
                 print('Invalid sequence!')
             else:
                 break
-        if seq == '0':
+        if seq == _SEQ_SKIP:
             print('Skipped manually')
             continue
         path = os.path.join(directory, _add_suffix(seq))
-        if not os.path.isfile(path):
-            mpimg.imsave(path, img)
-        else:
+        if os.path.isfile(path):
             print('Warning: char sequence already exists in dataset! Skipping')
+        else:
+            mpimg.imsave(path, img)
     plt.ioff()
 
 
@@ -183,7 +186,8 @@ def partition_training_images_to_chars(force_update=False):
     time_start = time.time()
     try:
         json_dict = json.load(open(_PARTITION_JSON))
-    except ValueError as e:
+    except Exception as e:
+        print(e)
         print('Warning: failed to load {}. Reconstructing...'.
               format(_PARTITION_JSON))
         json_dict = {}
@@ -250,7 +254,3 @@ def partition_training_images_to_chars(force_update=False):
     time_end = time.time()
     print('Elapsed time of partitioning training images: {}'.format(
         time_end - time_start))
-
-
-if __name__ == '__main__':
-    pass
