@@ -13,12 +13,12 @@ from captcha_recognizer import CaptchaRecognizer
 _cm_greys = plt.cm.get_cmap('Greys')
 _png = '.png'
 
-dataset_dir = c.get('dataset')
-training_set_dir = os.path.join(dataset_dir, c.get('training'))
-training_char_dir = os.path.join(dataset_dir, c.get('training_char'))
-test_set_dir = os.path.join(dataset_dir, c.get('test'))
+_dataset_dir = c.get('dataset')
+_training_set_dir = os.path.join(_dataset_dir, c.get('training'))
+_training_char_dir = os.path.join(_dataset_dir, c.get('training_char'))
+_test_set_dir = os.path.join(_dataset_dir, c.get('test'))
 
-_PARTITION_JSON = os.path.join(dataset_dir, 'partition.json')
+_PARTITION_JSON = os.path.join(_dataset_dir, 'partition.json')
 _NUM_TOTAL = '###total'
 _NUM_FAIL = '##fail'
 _NUM_SUCCESS = '##success'
@@ -35,22 +35,18 @@ def _contain_invalid_char(seq):
 
 
 def _get_training_char_dir(char):
-    return os.path.join(training_char_dir, char)
+    return os.path.join(_training_char_dir, char)
 
 
-def _make_all_char_dirs():
-    for char in captcha_source.chars:
-        c.make_dirs(_get_training_char_dir(char))
+c.make_dirs(_training_set_dir)
+c.make_dirs(_training_char_dir)
+c.make_dirs(_test_set_dir)
+for _char in captcha_source.chars:
+    c.make_dirs(_get_training_char_dir(_char))
 
 
-c.make_dirs(training_set_dir)
-c.make_dirs(training_char_dir)
-c.make_dirs(test_set_dir)
-_make_all_char_dirs()
-
-
-def char_path(char, path):
-    return os.path.join(training_char_dir, char, path)
+def _get_training_char_path(char, path):
+    return os.path.join(_get_training_char_dir(char), path)
 
 
 # Fetch some CAPTCHA images from a CAPTCHA source to a directory
@@ -92,16 +88,16 @@ def _fetch_captchas_to_dir(directory, num=1, use_https=False):
 
 
 def clear_training_set():
-    c.clear_dir(training_set_dir)
+    c.clear_dir(_training_set_dir)
 
 
 def clear_training_chars():
-    for directory in os.listdir(training_char_dir):
-        c.clear_dir(os.path.join(training_char_dir, directory))
+    for directory in os.listdir(_training_char_dir):
+        c.clear_dir(os.path.join(_training_char_dir, directory))
 
 
 def clear_test_set():
-    c.clear_dir(test_set_dir)
+    c.clear_dir(_test_set_dir)
 
 
 # def clear_dataset():
@@ -110,11 +106,11 @@ def clear_test_set():
 
 
 def fetch_training_set(num=1, use_https=False):
-    _fetch_captchas_to_dir(training_set_dir, num, use_https)
+    _fetch_captchas_to_dir(_training_set_dir, num, use_https)
 
 
 def fetch_test_set(num=1, use_https=False):
-    _fetch_captchas_to_dir(test_set_dir, num, use_https)
+    _fetch_captchas_to_dir(_test_set_dir, num, use_https)
 
 
 # Get one image from a directory
@@ -125,14 +121,18 @@ def _get_image(directory, filename):
 
 
 # Get some images from a directory
-def _get_images(directory, num=1):
+# set num = 0 or None to get all
+def _get_images(directory, num=None):
     filenames = _list_png(directory)
-    if num > len(filenames):
-        num = len(filenames)
-        print('Warning: requesting more images than stored, returning all '
-              'available')
+    if num:
+        if num > len(filenames):
+            num = len(filenames)
+            print('Warning: requesting more images than stored, returning all '
+                  'available')
+        else:
+            random.shuffle(filenames)
     else:
-        random.shuffle(filenames)
+        num = len(filenames)
     return [_get_image(directory, filenames[i]) for i in range(num)]
 
 
@@ -150,12 +150,12 @@ def _get_suffix(filename):
     return ext
 
 
-def get_test_image(seq):
-    return _get_image(test_set_dir, _add_suffix(seq))
+# def get_test_image(seq):
+#     return _get_image(test_set_dir, _add_suffix(seq))
 
 
-def get_test_images(num=1):
-    return _get_images(test_set_dir, num)
+# def get_test_images(num=1):
+#     return _get_images(test_set_dir, num)
 
 
 # Return a training image randomly if seq is None
@@ -163,11 +163,15 @@ def get_training_image(seq=None):
     if seq is None:
         return get_training_images(1)[0]
     else:
-        return _get_image(training_set_dir, _add_suffix(seq))
+        return _get_image(_training_set_dir, _add_suffix(seq))
 
 
 def get_training_images(num=1):
-    return _get_images(training_set_dir, num)
+    return _get_images(_training_set_dir, num)
+
+
+def get_training_char_images(char, num=1):
+    return _get_images(_get_training_char_dir(char), num)
 
 
 # List all png files in a directory
@@ -178,7 +182,7 @@ def _list_png(directory):
     return list(filter(png_filter, os.listdir(directory)))
 
 
-def _list_seq(directory):
+def _list_basename(directory):
     return list(map(_remove_suffix, _list_png(directory)))
 
 
@@ -197,7 +201,7 @@ def partition_training_images_to_chars(force_update=False):
         json_dict[_SUCCESS] = []
         for char in captcha_source.chars:
             json_dict[_NUM_CHAR.format(char)] = 0
-    seqs = _list_seq(training_set_dir)
+    seqs = _list_basename(_training_set_dir)
     num_total = len(seqs)
     old_seq_set = set(json_dict[_FAIL] + json_dict[_SUCCESS])
 
@@ -221,7 +225,7 @@ def partition_training_images_to_chars(force_update=False):
             for i in range(len(char_images)):
                 char = seq[i]
                 json_dict[_NUM_CHAR.format(char)] += 1
-                path = char_path(char, _add_suffix('{}.{}'.format(seq, i + 1)))
+                path = _get_training_char_path(char, _add_suffix('{}.{}'.format(seq, i + 1)))
                 mpimg.imsave(path, char_images[i], cmap=_cm_greys)
         else:
             json_dict[_FAIL].append(seq)

@@ -135,10 +135,15 @@ class CaptchaRecognizer:
         if save_intermediate:
             mpimg.imsave(c.temp_path('03.00000.png'), labels)
         # Arrange the segments from left to right
-        xmin_arr = np.array(
-            [object_slice[1].start for object_slice in object_slices]
-        )
-        char_images = [img_02[object_slices[i]] for i in xmin_arr.argsort()]
+        xmin_arr = np.array([s[1].start for s in object_slices])
+        sort_index = xmin_arr.argsort()
+        char_images = []
+        # noinspection PyTypeChecker
+        for i in sort_index:
+            char_image = img_02.copy()
+            char_image[labels != i + 1] = 0
+            char_image = char_image[object_slices[i]]
+            char_images.append(char_image)
 
         # Check if segmentation was successful
         if len(char_images) == self.character_num:
@@ -152,13 +157,12 @@ class CaptchaRecognizer:
                     np.all(heights <= self.char_height_max) and
                     np.all(widths >= self.char_width_min) and
                     np.all(widths <= self.char_width_max)):
-                def resize(char_image):
-                    return sp.misc.imresize(
-                        char_image,
-                        (self.char_height_std, self.char_width_std)
-                    )
-
-                char_images = list(map(resize, char_images))
+                # def resize(char_image):
+                #     return sp.misc.imresize(
+                #         char_image,
+                #         (self.char_height_std, self.char_width_std)
+                #     )
+                # char_images = list(map(resize, char_images))
                 if save_intermediate:
                     for i in range(len(char_images)):
                         mpimg.imsave(
@@ -246,7 +250,7 @@ class CaptchaRecognizer:
     def segment_with_label(self, img):
         # Next-nearest neighbors
         struct_nnn = np.ones((3, 3), dtype=int)
-        labels, num_labels = ndimage.label(img > 0, structure=struct_nnn)
+        labels, _ = ndimage.label(img, structure=struct_nnn)
         # np.savetxt(c.temp_path('labels.txt'), labels, fmt='%d')
         object_slices = ndimage.find_objects(labels)
         return labels, object_slices
