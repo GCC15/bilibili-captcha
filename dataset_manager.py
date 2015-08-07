@@ -159,15 +159,6 @@ def _list_png(directory):
     return list(filter(png_filter, os.listdir(directory)))
 
 
-# def _list_unconverted_png(directory):
-#     list = _list_png(directory)
-#     final_list = []
-#     for i in range(len(list)):
-#         if list[i][5:9] != ".con":
-#             final_list.append(list[i])
-#     return final_list
-
-
 # def _list_seq(directory):
 #     return list(map(_remove_suffix, _list_png(directory)))
 
@@ -231,10 +222,12 @@ def partition_training_images_to_chars(force_update=False):
     )
     print('Update: {}'.format(num_update))
     print('Update success: {}'.format(num_update_success))
-    print('Update success rate is: {}'.format(num_update_success/(num_update*1.0)))
+    if num_update:
+        print('Update success rate is: {}'.format(num_update_success / num_update))
     print('Total: {}'.format(num_total))
     print('Total success: {}'.format(num_total_success))
-    print('Total success rate is: {}'.format(num_total_success/(num_total*1.0)))
+    if num_total:
+        print('Total success rate is: {}'.format(num_total_success / num_total))
 
     time_end = time.time()
     print('Elapsed time: {}'.format(time_end - time_start))

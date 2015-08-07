@@ -74,11 +74,6 @@ def _show_image(img, cmap=_cm_greys, title=None):
     plt.show()
 
 
-# Resize characters to another shape
-def _resize_image_to_standard(img, width, height):
-    return sp.misc.imresize(img, (height, width))
-
-
 class CaptchaRecognizer:
     def __init__(self):
         # TODO: tune the tolerance values
@@ -143,15 +138,15 @@ class CaptchaRecognizer:
             if verbose:
                 print('Heights {}'.format(heights))
                 print('Widths {}'.format(widths))
+            # noinspection PyTypeChecker
             if (np.all(heights >= self.char_height_min) and
                     np.all(heights <= self.char_height_max) and
                     np.all(widths >= self.char_width_min) and
                     np.all(widths <= self.char_width_max)):
                 def resize(char_image):
-                    return _resize_image_to_standard(
+                    return sp.misc.imresize(
                         char_image,
-                        self.char_width_std,
-                        self.char_height_std
+                        (self.char_height_std, self.char_width_std)
                     )
 
                 char_images = list(map(resize, char_images))
@@ -198,15 +193,17 @@ class CaptchaRecognizer:
     def remove_noise_with_hsv(self, img):
         # Use number of occurrences to find the standard h, s, v
         # Convert to int so we can sort the colors
-        # t0 = time.time()
-        # TODO: this line is too slow! optimize
-        img_int = np.apply_along_axis(_rgb_to_int, 2, img)
-        # t1 = time.time()
-        # print('_rgb_to_int: {}'.format(t1 - t0))
+        # noinspection PyTypeChecker
+        img_int = np.dot(np.rint(img * 255), np.power(256, np.arange(3)))
         color_array = _sort_by_occurrence(img_int.flatten())
         # 2nd most frequent
         std_color = color_array[1]
-        std_h, std_s, std_v = colors.rgb_to_hsv(_int_to_rgb(std_color))
+        std_b, mod = divmod(std_color, 256 ** 2)
+        std_g, std_r = divmod(mod, 256)
+        # print([std_r, std_g, std_b])
+        std_h, std_s, std_v = colors.rgb_to_hsv(
+            np.array([std_r, std_g, std_b]) / 255
+        )
         # print(std_h * 360, std_s * 100, std_v * 100)
         height, width, _ = img.shape
         img_hsv = colors.rgb_to_hsv(img)
@@ -309,10 +306,10 @@ class CaptchaRecognizer:
                     y, x - 1) not in region_point:
                 aux_list.append((y, x + 1))
             if y + 1 < height and img[y + 1, x] == 1 and (
-                    y + 1, x) not in region_point:
+                        y + 1, x) not in region_point:
                 aux_list.append((y + 1, x))
             if y - 1 >= 0 and img[y - 1, x] == 1 and (
-                    y - 1, x) not in region_point:
+                        y - 1, x) not in region_point:
                 aux_list.append((y - 1, x))
         print(region_point)
 

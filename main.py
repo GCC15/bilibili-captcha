@@ -7,8 +7,8 @@ import captcha_source
 
 
 def main():
-    test_fetch_training_set()
-    # test_captcha_recognizing()
+    # test_fetch_training_set()
+    test_captcha_recognizing()
     # dataset_manager.partition_training_images_to_chars()
 
 
