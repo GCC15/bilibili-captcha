@@ -22,6 +22,7 @@ _PARTITION_JSON = os.path.join(dataset_dir, 'partition.json')
 _partition_json = json.load(open(_PARTITION_JSON))
 _FAIL = 'fail'
 _SUCCESS = 'success'
+_TOTAL = 'total number'
 _CAPTCHA_LENGTH = captcha_source.captcha_length
 
 
@@ -215,7 +216,8 @@ def partition_training_images_to_chars(force_update=False):
     json.dump(
         {
             _FAIL: fail_list,
-            _SUCCESS: success_list
+            _SUCCESS: success_list,
+            _TOTAL: num_total
         },
         open(_PARTITION_JSON, 'w'),
         indent=2
