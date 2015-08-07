@@ -1,3 +1,5 @@
+# Handle image processing before giving over to captcha learner
+
 import config as c
 import captcha_source
 import random
@@ -10,14 +12,11 @@ import numpy.linalg as la
 import scipy as sp
 import scipy.misc
 from scipy import ndimage
-
-
 # import skimage.morphology as morph
 # import skimage.segmentation as seg
 
 
 # A generic function timer
-# TODO: consider using a decorator instead
 def _time_func(tag, func):
     t0 = time.time() if tag else None
     ret = func()
@@ -30,10 +29,9 @@ def _time_func(tag, func):
 # Compose a single-argument function n times
 def _repeat(func, n):
     def ret(x):
-        r = x
         for i in range(n):
-            r = func(r)
-        return r
+            x = func(x)
+        return x
 
     return ret
 

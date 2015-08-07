@@ -20,11 +20,17 @@ training_char_dir = os.path.join(dataset_dir, c.get('training_char'))
 test_set_dir = os.path.join(dataset_dir, c.get('test'))
 
 _PARTITION_JSON = os.path.join(dataset_dir, 'partition.json')
-_partition_json = json.load(open(_PARTITION_JSON))
+_NUM_TOTAL = '###total'
+_NUM_FAIL = '##fail'
+_NUM_SUCCESS = '##success'
+_SUCCESS_RATE = '##success_rate'
+_NUM_CHAR = '#{}'
 _FAIL = 'fail'
 _SUCCESS = 'success'
-_TOTAL = 'total number'
-_CAPTCHA_LENGTH = captcha_source.captcha_length
+
+
+def _contain_invalid_char(seq):
+    return any(char not in captcha_source.chars for char in seq)
 
 
 def _get_training_char_dir(char):
@@ -60,12 +66,21 @@ def _fetch_captchas_to_dir(directory, num=1, use_https=False):
         # https://github.com/matplotlib/matplotlib/issues/1646/
         plt.show()
         plt.pause(1e-2)
-        seq = input('[{}] Enter the char sequence: '.format(i))
-        seq = captcha_source.canonicalize(seq)
-        while len(seq) != _CAPTCHA_LENGTH:
-            print('Incorrect length, length should be {0}'.format(_CAPTCHA_LENGTH))
+        while True:
             seq = input('[{}] Enter the char sequence: '.format(i))
+            # To skip a CAPTCHA.
+            # Warning: skipping may reduce the quality of the training set.
+            if seq == '0':
+                break
             seq = captcha_source.canonicalize(seq)
+            if (len(seq) != captcha_source.captcha_length or
+                    _contain_invalid_char(seq)):
+                print('Invalid sequence!')
+            else:
+                break
+        if seq == '0':
+            print('Skipped manually')
+            continue
         path = os.path.join(directory, _add_suffix(seq))
         if not os.path.isfile(path):
             mpimg.imsave(path, img)
@@ -161,8 +176,8 @@ def _list_png(directory):
     return list(filter(png_filter, os.listdir(directory)))
 
 
-# def _list_seq(directory):
-#     return list(map(_remove_suffix, _list_png(directory)))
+def _list_seq(directory):
+    return list(map(_remove_suffix, _list_png(directory)))
 
 
 # def _list_unconverted_seq(directory):
@@ -179,58 +194,70 @@ def _list_png(directory):
 
 def partition_training_images_to_chars(force_update=False):
     time_start = time.time()
-    fail_list = [] if force_update else _partition_json[_FAIL]
-    success_list = [] if force_update else _partition_json[_SUCCESS]
-    old_file_set = set(fail_list + success_list)
+    try:
+        json_dict = json.load(open(_PARTITION_JSON))
+    except ValueError as e:
+        print('Warning: failed to load {}. Reconstructing...'.
+              format(_PARTITION_JSON))
+        json_dict = {}
+        force_update = True
+    if force_update:
+        json_dict[_FAIL] = []
+        json_dict[_SUCCESS] = []
+        for char in captcha_source.chars:
+            json_dict[_NUM_CHAR.format(char)] = 0
+    seqs = _list_seq(training_set_dir)
+    num_total = len(seqs)
+    old_seq_set = set(json_dict[_FAIL] + json_dict[_SUCCESS])
 
-    def filename_filter(f):
-        return f not in old_file_set
+    def seq_filter(s):
+        return s not in old_seq_set
 
-    filenames = _list_png(training_set_dir)
-    num_total = len(filenames)
-    filenames = list(filter(filename_filter, filenames))
-    num_update = len(filenames)
+    seqs = list(filter(seq_filter, seqs))
+    num_update = len(seqs)
     num_update_success = 0
     recognizer = CaptchaRecognizer()
+
     for n in range(num_update):
-        filename = filenames[n]
-        seq = _remove_suffix(filename)
+        seq = seqs[n]
         print('{}/{}: {}'.format(n, num_update, seq))
         img = get_training_image(seq)
         char_images = recognizer.partition(img)
-        # img_01 = recognizer.remove_noise_with_hsv(img)
-        # img_02 = recognizer.remove_noise_with_neighbors(img_01)
-        # img_02 = recognizer.remove_noise_with_neighbors(img_02)
-        # _, cut_line = recognizer.find_vertical_separation_line(img_02)
-        # img_list = recognizer.cut_images_by_vertical_line(img_02, cut_line)
+        # If successful
         if char_images is not None:
-            success_list.append(filename)
+            json_dict[_SUCCESS].append(seq)
             num_update_success += 1
             for i in range(len(char_images)):
-                path = char_path(seq[i], _add_suffix('{}.{}'.format(seq, i + 1)))
+                char = seq[i]
+                json_dict[_NUM_CHAR.format(char)] += 1
+                path = char_path(char, _add_suffix('{}.{}'.format(seq, i + 1)))
                 mpimg.imsave(path, char_images[i], cmap=_cm_greys)
         else:
-            fail_list.append(filename)
-    num_total_success = len(success_list)
-    success_list.sort()
-    fail_list.sort()
+            json_dict[_FAIL].append(seq)
+
+    num_total_success = len(json_dict[_SUCCESS])
+    json_dict[_NUM_TOTAL] = num_total
+    json_dict[_NUM_FAIL] = num_total - num_total_success
+    json_dict[_NUM_SUCCESS] = num_total_success
+    total_success_rate = num_total_success / num_total if num_total else 0
+    json_dict[_SUCCESS_RATE] = '{:.3%}'.format(total_success_rate)
+    json_dict[_FAIL].sort()
+    json_dict[_SUCCESS].sort()
     json.dump(
-        {
-            _FAIL: fail_list,
-            _SUCCESS: success_list,
-            _TOTAL: num_total
-        },
+        json_dict,
         open(_PARTITION_JSON, 'w'),
+        sort_keys=True,
         indent=2
     )
+
     print('Update: {}'.format(num_update))
     print('Update success: {}'.format(num_update_success))
     if num_update:
         print('Update success rate is: {}'.format(num_update_success / num_update))
+
     print('Total: {}'.format(num_total))
     print('Total success: {}'.format(num_total_success))
-    if num_total:
-        print('Total success rate is: {}'.format(num_total_success / num_total))
+    print('Total success rate is: {}'.format(total_success_rate))
 
     time_end = time.time()
     print('Elapsed time: {}'.format(time_end - time_start))
