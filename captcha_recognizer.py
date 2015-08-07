@@ -129,8 +129,6 @@ class CaptchaRecognizer:
             mpimg.imsave(c.temp_path('02.neighbor.png'), img_02, cmap=_cm_greys)
 
         # 3
-        if verbose: t0 = time.time()
-        # labels, object_slices = self.segment_with_label(img_02)
         labels, object_slices = _time_func(
             'segment_with_label' if verbose else None,
             lambda: self.segment_with_label(img_02)
