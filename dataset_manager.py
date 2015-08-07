@@ -3,12 +3,13 @@
 import os
 import random
 import json
+import time
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import captcha_source
 import config as c
 from captcha_recognizer import CaptchaRecognizer
-import time
+
 
 _cm_greys = plt.cm.get_cmap('Greys')
 _png = '.png'
