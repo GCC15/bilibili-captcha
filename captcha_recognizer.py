@@ -83,38 +83,39 @@ class CaptchaRecognizer:
 
     # Try to partition a CAPTCHA into each char image
     # save_intermediate: whether I should save intermediate images
+    # noinspection PyUnboundLocalVariable
     def partition(self, img, save_intermediate=False, verbose=False):
         if save_intermediate:
             mpimg.imsave(c.temp_path('00.origin.png'), img)
 
         # 1
-        t0 = time.time()
+        if verbose: t0 = time.time()
         img_01 = self.remove_noise_with_hsv(img)
-        t1 = time.time()
         if verbose:
+            t1 = time.time()
             print('Time for remove_noise_with_hsv: {}'.format(t1 - t0))
         if save_intermediate:
             mpimg.imsave(c.temp_path('01.hsv.png'), img_01, cmap=_cm_greys)
 
         # 2
-        t0 = time.time()
+        if verbose: t0 = time.time()
         img_02 = self.remove_noise_with_neighbors(img_01)
         img_02 = self.remove_noise_with_neighbors(img_02)
-        t1 = time.time()
         if verbose:
+            t1 = time.time()
             print('Time for remove_noise_with_neighbors: {}'.format(t1 - t0))
         if save_intermediate:
             mpimg.imsave(c.temp_path('02.neighbor.png'), img_02, cmap=_cm_greys)
 
         # 3
-        t0 = time.time()
+        if verbose: t0 = time.time()
         labels, object_slices = self.segment_with_label(img_02)
-        t1 = time.time()
-        if save_intermediate:
-            mpimg.imsave(c.temp_path('03.00000.png'), labels)
         if verbose:
+            t1 = time.time()
             print('Time for segment: {}'.format(t1 - t0))
             print('{} connected components found'.format(len(object_slices)))
+        if save_intermediate:
+            mpimg.imsave(c.temp_path('03.00000.png'), labels)
         # Arrange the segments from left to right
         xmin_arr = np.array(
             [object_slice[1].start for object_slice in object_slices]
@@ -147,7 +148,7 @@ class CaptchaRecognizer:
                             char_images[i], cmap=_cm_greys)
                 return char_images
         if verbose:
-            print('Warning: partition failed')
+            print('Warning: partition failed!')
         return None
 
         # t0 = time.time()
@@ -169,11 +170,7 @@ class CaptchaRecognizer:
         # print(self.get_degree_of_similarity(image_cut[0], image_cut[1]))
 
     def recognize(self, img, save_intermediate=False, verbose=False):
-        char_images = self.partition(
-            img,
-            save_intermediate=save_intermediate,
-            verbose=verbose
-        )
+        char_images = self.partition(img, save_intermediate, verbose)
 
         # TODO: hand over to the neural network
 
@@ -191,6 +188,7 @@ class CaptchaRecognizer:
         std_b, mod = divmod(std_color, 256 ** 2)
         std_g, std_r = divmod(mod, 256)
         # print([std_r, std_g, std_b])
+        # noinspection PyTypeChecker
         std_h, std_s, std_v = colors.rgb_to_hsv(
             np.array([std_r, std_g, std_b]) / 255
         )
