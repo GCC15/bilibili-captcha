@@ -10,8 +10,6 @@ import numpy.linalg as la
 import scipy as sp
 import scipy.misc
 from scipy import ndimage
-
-
 # import skimage.morphology as morph
 # import skimage.segmentation as seg
 
@@ -51,14 +49,6 @@ def _sort_by_occurrence(arr):
     u, counts = np.unique(arr, return_counts=True)
     sort_index = counts.argsort()[::-1]
     return u[sort_index]
-
-
-def _rgb_to_int(rgb):
-    return int(colors.rgb2hex(rgb)[1:], 16)
-
-
-def _int_to_rgb(n):
-    return colors.hex2color('#{:06x}'.format(n))
 
 
 # Color map for grayscale images
