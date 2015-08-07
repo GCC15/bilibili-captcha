@@ -10,8 +10,32 @@ import numpy.linalg as la
 import scipy as sp
 import scipy.misc
 from scipy import ndimage
+
+
 # import skimage.morphology as morph
 # import skimage.segmentation as seg
+
+
+# A generic function timer
+# TODO: consider using a decorator instead
+def _time_func(tag, func):
+    t0 = time.time() if tag else None
+    ret = func()
+    if tag:
+        t1 = time.time()
+        print('Time for {}: {}'.format(tag, t1 - t0))
+    return ret
+
+
+# Compose a single-argument function n times
+def _repeat(func, n):
+    def ret(x):
+        r = x
+        for i in range(n):
+            r = func(r)
+        return r
+
+    return ret
 
 
 # https://en.wikipedia.org/wiki/Lennard-Jones_potential
@@ -89,30 +113,29 @@ class CaptchaRecognizer:
             mpimg.imsave(c.temp_path('00.origin.png'), img)
 
         # 1
-        if verbose: t0 = time.time()
-        img_01 = self.remove_noise_with_hsv(img)
-        if verbose:
-            t1 = time.time()
-            print('Time for remove_noise_with_hsv: {}'.format(t1 - t0))
+        img_01 = _time_func(
+            'remove_noise_with_hsv' if verbose else None,
+            lambda: self.remove_noise_with_hsv(img)
+        )
         if save_intermediate:
             mpimg.imsave(c.temp_path('01.hsv.png'), img_01, cmap=_cm_greys)
 
         # 2
-        if verbose: t0 = time.time()
-        img_02 = self.remove_noise_with_neighbors(img_01)
-        img_02 = self.remove_noise_with_neighbors(img_02)
-        if verbose:
-            t1 = time.time()
-            print('Time for remove_noise_with_neighbors: {}'.format(t1 - t0))
+        img_02 = _time_func(
+            'remove_noise_with_neighbors' if verbose else None,
+            lambda: _repeat(self.remove_noise_with_neighbors, 2)(img_01)
+        )
         if save_intermediate:
             mpimg.imsave(c.temp_path('02.neighbor.png'), img_02, cmap=_cm_greys)
 
         # 3
         if verbose: t0 = time.time()
-        labels, object_slices = self.segment_with_label(img_02)
+        # labels, object_slices = self.segment_with_label(img_02)
+        labels, object_slices = _time_func(
+            'segment_with_label' if verbose else None,
+            lambda: self.segment_with_label(img_02)
+        )
         if verbose:
-            t1 = time.time()
-            print('Time for segment: {}'.format(t1 - t0))
             print('{} connected components found'.format(len(object_slices)))
         if save_intermediate:
             mpimg.imsave(c.temp_path('03.00000.png'), labels)
