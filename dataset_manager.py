@@ -27,6 +27,13 @@ _TOTAL = 'total number'
 _CAPTCHA_LENGTH = captcha_source.captcha_length
 
 
+def _contain_invalid_char(seq):
+    for i in seq:
+        if i not in captcha_source.chars:
+            return True
+    return False
+
+
 def _get_training_char_dir(char):
     return os.path.join(training_char_dir, char)
 
@@ -62,15 +69,21 @@ def _fetch_captchas_to_dir(directory, num=1, use_https=False):
         plt.pause(1e-2)
         seq = input('[{}] Enter the char sequence: '.format(i))
         seq = captcha_source.canonicalize(seq)
-        while len(seq) != _CAPTCHA_LENGTH:
-            print('Incorrect length, length should be {0}'.format(_CAPTCHA_LENGTH))
+        # '0' means skip
+        while seq != '0' and (len(seq) != _CAPTCHA_LENGTH or _contain_invalid_char(seq)):
+            if len(seq) != _CAPTCHA_LENGTH and seq != '0':
+                print('Incorrect length, length should be {0}'.format(_CAPTCHA_LENGTH))
+            else:
+                print('Sequence contains invalid character')
             seq = input('[{}] Enter the char sequence: '.format(i))
             seq = captcha_source.canonicalize(seq)
         path = os.path.join(directory, _add_suffix(seq))
-        if not os.path.isfile(path):
-            mpimg.imsave(path, img)
-        else:
+        if os.path.isfile(path):
             print('Warning: char sequence already exists in dataset! Skipping')
+        elif seq == '0':
+            print('Char sequence is manualy Skipped')
+        else:
+            mpimg.imsave(path, img)
     plt.ioff()
 
 

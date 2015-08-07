@@ -1,3 +1,5 @@
+# Handle image processing before giving over to captcha learner
+
 import config as c
 import captcha_source
 import random
