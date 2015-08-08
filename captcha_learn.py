@@ -4,7 +4,6 @@ import timeit
 import numpy
 import theano
 import theano.tensor as T
-import gzip
 
 # Reference:
 # http://deeplearning.net/tutorial/logreg.html
@@ -176,6 +175,7 @@ class HiddenLayer(object):
         #        compared to tanh
         #        We have no info for other function, so we use the same as
         #        tanh.
+
         if W is None:
             W_values = numpy.asarray(
                 rng.uniform(
@@ -406,9 +406,6 @@ def test_mlp(datasets, learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001, n_epochs=
         }
     )
 
-    ###############
-    # TRAIN MODEL #
-    ###############
     print('... training')
 
     # early-stopping parameters
@@ -485,59 +482,22 @@ def test_mlp(datasets, learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001, n_epochs=
     print(('Optimization complete. Best validation score of %f %% '
            'obtained at iteration %i, with test performance %f %%') %
           (best_validation_loss * 100., best_iter + 1, test_score * 100.))
-    print >> sys.stderr, ('The code for file ' +
-                          os.path.split(__file__)[1] +
-                          ' ran for %.2fm' % ((end_time - start_time) / 60.))
 
 
-def load_data(dataset):
-    ''' Loads the dataset
-
-    :type dataset: string
-    :param dataset: the path to the dataset (here MNIST)
-    '''
-
-    #############
-    # LOAD DATA #
-    #############
-
-    # Download the MNIST dataset if it is not present
-    data_dir, data_file = os.path.split(dataset)
-    if data_dir == "" and not os.path.isfile(dataset):
-        # Check if dataset is in the data directory.
-        new_path = os.path.join(
-            os.path.split(__file__)[0],
-            "..",
-            "data",
-            dataset
-        )
-        if os.path.isfile(new_path) or data_file == 'mnist.pkl.gz':
-            dataset = new_path
-
-    if (not os.path.isfile(dataset)) and data_file == 'mnist.pkl.gz':
-        import urllib
-        origin = (
-            'http://www.iro.umontreal.ca/~lisa/deep/data/mnist/mnist.pkl.gz'
-        )
-        print('Downloading data from %s' % origin)
-        urllib.urlretrieve(origin, dataset)
-
-    print('... loading data')
-
-    # Load the dataset
-    f = gzip.open(dataset, 'rb')
-    # train_set, valid_set, test_set = cPickle.load(f) Warning: cPickle only support Python 2.x
-    f.close()
-    #train_set, valid_set, test_set format: tuple(input, target)
-    #input is an numpy.ndarray of 2 dimensions (a matrix)
-    #witch row's correspond to an example. target is a
-    #numpy.ndarray of 1 dimensions (vector)) that have the same length as
-    #the number of rows in the input. It should give the target
-    #target to the example with the same index in the input.
+def load_data():
+    pass
+    # Loading the dataset
+    # Output format: [train_set, valid_set, test_set]
+    # train_set, valid_set, test_set format: tuple(input, target)
+    # input is an numpy.ndarray of 2 dimensions (a matrix)
+    # witch row's correspond to an example. target is a
+    # numpy.ndarray of 1 dimensions (vector)) that have the same length as
+    # the number of rows in the input. It should give the target
+    # target to the example with the same index in the input.
 
 def main():
     # TODO: design our own load_data(dataset) or whatever API we use
-    dataset = load_data('mnist.pkl.gz')
+    dataset = load_data()
     test_mlp(dataset)
 
 
