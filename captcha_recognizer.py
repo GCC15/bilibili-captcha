@@ -9,8 +9,6 @@ import matplotlib.colors as colors
 import matplotlib.image as mpimg
 import numpy as np
 import numpy.linalg as la
-import scipy as sp
-import scipy.misc
 # import skimage.morphology as morph
 # import skimage.segmentation as seg
 from scipy import ndimage
@@ -78,11 +76,12 @@ _cm_greys = plt.cm.get_cmap('Greys')
 
 
 # Show image in matplotlib window
-def _show_image(img, cmap=_cm_greys, title=None):
+def _show_image(img, cmap=_cm_greys, title=None, interp=None):
     plt.clf()
     plt.axis('off')
-    plt.imshow(img, cmap=cmap)
-    plt.title(title)
+    plt.imshow(img, cmap=cmap, interpolation=interp)
+    if title:
+        plt.title(title)
     plt.show()
 
 
@@ -154,12 +153,7 @@ class CaptchaRecognizer:
                     np.all(heights <= self.char_height_max) and
                     np.all(widths >= self.char_width_min) and
                     np.all(widths <= self.char_width_max)):
-                # def resize(char_image):
-                #     return sp.misc.imresize(
-                #         char_image,
-                #         (self.char_height_std, self.char_width_std)
-                #     )
-                # char_images = list(map(resize, char_images))
+
                 if save_intermediate:
                     for i in range(len(char_images)):
                         mpimg.imsave(

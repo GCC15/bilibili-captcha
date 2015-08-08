@@ -8,16 +8,18 @@ import captcha_source
 
 def main():
     # dataset_manager.fetch_training_set(70)
-    # test_captcha_recognition()
+    test_captcha_recognition()
     # dataset_manager.partition_training_images_to_chars()
-    # dataset_manager.partition_training_images_to_chars(force_update=True,
-    # save=True)
-    dataset_manager.tune_partition_parameter()
+    # dataset_manager.partition_training_images_to_chars(
+    #     force_update=True,
+    #     save=True)
+    # dataset_manager.tune_partition_parameter()
 
 
 def test_captcha_recognition():
     c.clear_temp()
-    seq = 'QN4EL'
+    seq = None
+    # seq = 'QN4EL'
 
     # Sticking together
     # seq = 'WMQPQ'

@@ -1,9 +1,14 @@
+import dataset_manager
+import captcha_source
 import os
 import sys
 import timeit
 import numpy
 import theano
 import theano.tensor as T
+
+_std_height = 20
+_std_width = 15
 
 # Reference:
 # http://deeplearning.net/tutorial/logreg.html
@@ -485,7 +490,21 @@ def test_mlp(datasets, learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001, n_epochs=
 
 
 def load_data():
-    pass
+    input_list = []
+    target_list = []
+    num_cats = len(captcha_source.chars)
+    cats = numpy.arange(num_cats, dtype=int)
+    for cat in cats:
+        char = captcha_source.chars[cat]
+        char_images = dataset_manager.get_training_char_images(char)
+        for image in char_images:
+            target_list.append(cat)
+            input_list.append(dataset_manager.resize(
+                image, _std_height, _std_width
+            ).flatten())
+    inputs = numpy.array(input_list)
+    targets = numpy.array(target_list)
+    return inputs, targets
     # Loading the dataset
     # Output format: [train_set, valid_set, test_set]
     # train_set, valid_set, test_set format: tuple(input, target)
@@ -498,7 +517,19 @@ def load_data():
 def main():
     # TODO: design our own load_data(dataset) or whatever API we use
     dataset = load_data()
-    test_mlp(dataset)
+    inputs, targets = dataset
+    print(inputs.shape)
+    print(targets.shape)
+    import captcha_recognizer
+    captcha_recognizer._show_image(
+        numpy.reshape(
+            inputs[numpy.random.rand() * inputs.shape[0]],
+            (_std_height, _std_width)
+        ),
+        interp='none'
+    )
+    print(numpy.unique(targets))
+    # test_mlp(dataset)
 
 
 if __name__ == '__main__':

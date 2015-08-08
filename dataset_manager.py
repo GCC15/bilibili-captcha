@@ -7,6 +7,8 @@ import time
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import numpy as np
+import scipy as sp
+import scipy.misc
 import captcha_source
 import config as c
 from captcha_recognizer import CaptchaRecognizer
@@ -116,15 +118,17 @@ def fetch_test_set(num=1, use_https=False):
 
 
 # Get one image from a directory
-def _get_image(directory, filename):
+def _get_image(directory, filename, mode='rgb'):
     image = mpimg.imread(os.path.join(directory, filename))
-    # Discard alpha channel
-    return image[:, :, 0:3]
+    if mode == 'rgb':
+        return image[:, :, 0:3]
+    elif mode == 'gray':
+        return 1 - image[:, :, 0]
 
 
 # Get some images from a directory
 # set num = 0 or None to get all
-def _get_images(directory, num=None):
+def _get_images(directory, num=None, mode='rgb'):
     filenames = _list_png(directory)
     if num:
         if num > len(filenames):
@@ -135,7 +139,7 @@ def _get_images(directory, num=None):
             random.shuffle(filenames)
     else:
         num = len(filenames)
-    return [_get_image(directory, filenames[i]) for i in range(num)]
+    return [_get_image(directory, filenames[i], mode) for i in range(num)]
 
 
 def _add_suffix(basename, suffix=_png):
@@ -168,12 +172,12 @@ def get_training_image(seq=None):
         return _get_image(_training_set_dir, _add_suffix(seq))
 
 
-def get_training_images(num=1):
+def get_training_images(num=None):
     return _get_images(_training_set_dir, num)
 
 
-def get_training_char_images(char, num=1):
-    return _get_images(_get_training_char_dir(char), num)
+def get_training_char_images(char, num=None):
+    return _get_images(_get_training_char_dir(char), num, mode='gray')
 
 
 # List all png files in a directory
@@ -188,7 +192,8 @@ def _list_basename(directory):
     return list(map(_remove_suffix, _list_png(directory)))
 
 
-def partition_training_images_to_chars(captcha_recognizer, force_update=False,
+def partition_training_images_to_chars(captcha_recognizer = CaptchaRecognizer(),
+                                       force_update=False,
                                        save=True):
     time_start = time.time()
     try:
@@ -285,7 +290,14 @@ def tune_partition_parameter():
                     partition_training_images_to_chars(recognizer,
                                                        force_update=True,
                                                        save=False)
-    print(np.unravel_index(rate.argmax(),rate.shape))
+    print(np.unravel_index(rate.argmax(), rate.shape))
     print(rate.max())
-    np.save(os.path.join(_dataset_dir,'gridsearch.npy'),rate)
+    np.save(os.path.join(_dataset_dir, 'gridsearch.npy'), rate)
     return rate
+
+
+def resize(image, height, width):
+    return sp.misc.imresize(
+        image,
+        (height, width)
+    )
