@@ -6,6 +6,7 @@ import json
 import time
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
+import numpy as np
 import captcha_source
 import config as c
 from captcha_recognizer import CaptchaRecognizer
@@ -92,8 +93,9 @@ def clear_training_set():
 
 
 def clear_training_chars():
-    for directory in os.listdir(_training_char_dir):
-        c.clear_dir(os.path.join(_training_char_dir, directory))
+    for directory in (os.listdir(_training_char_dir)):
+        if directory in captcha_source.chars:
+            c.clear_dir(os.path.join(_training_char_dir, directory))
 
 
 def clear_test_set():
@@ -186,7 +188,8 @@ def _list_basename(directory):
     return list(map(_remove_suffix, _list_png(directory)))
 
 
-def partition_training_images_to_chars(force_update=False):
+def partition_training_images_to_chars(captcha_recognizer, force_update=False,
+                                       save=True):
     time_start = time.time()
     try:
         json_dict = json.load(open(_PARTITION_JSON))
@@ -211,11 +214,12 @@ def partition_training_images_to_chars(force_update=False):
     seqs = list(filter(seq_filter, seqs))
     num_update = len(seqs)
     num_update_success = 0
-    recognizer = CaptchaRecognizer()
+    recognizer = captcha_recognizer
 
     for n in range(num_update):
         seq = seqs[n]
-        print('{}/{}: {}'.format(n, num_update, seq))
+        if save:
+            print('{}/{}: {}'.format(n, num_update, seq))
         img = get_training_image(seq)
         char_images = recognizer.partition(img)
         # If successful
@@ -225,8 +229,10 @@ def partition_training_images_to_chars(force_update=False):
             for i in range(len(char_images)):
                 char = seq[i]
                 json_dict[_NUM_CHAR.format(char)] += 1
-                path = _get_training_char_path(char, _add_suffix('{}.{}'.format(seq, i + 1)))
-                mpimg.imsave(path, char_images[i], cmap=_cm_greys)
+                if save:
+                    path = _get_training_char_path(char, _add_suffix(
+                        '{}.{}'.format(seq, i + 1)))
+                    mpimg.imsave(path, char_images[i], cmap=_cm_greys)
         else:
             json_dict[_FAIL].append(seq)
 
@@ -244,17 +250,39 @@ def partition_training_images_to_chars(force_update=False):
         sort_keys=True,
         indent=2
     )
+    if save:
+        print('Update: {}'.format(num_update))
+        print('Update success: {}'.format(num_update_success))
+        if num_update:
+            print('Update success rate is: {}'.format(
+                num_update_success / num_update))
+        print('Total: {}'.format(num_total))
+        print('Total success: {}'.format(num_total_success))
+        print('Total success rate is: {}'.format(total_success_rate))
+        time_end = time.time()
+        print('Elapsed time of partitioning training images: {}'.format(
+            time_end - time_start))
+    if not save:
+        print('h_tol = {}'.format(recognizer.h_tolerance))
+        print('s_tol = {}'.format(recognizer.s_tolerance))
+        print('v_tol = {}'.format(recognizer.v_tolerance))
+        print('Total success rate is: {}'.format(total_success_rate))
+    return total_success_rate
 
-    print('Update: {}'.format(num_update))
-    print('Update success: {}'.format(num_update_success))
-    if num_update:
-        print('Update success rate is: {}'.format(
-            num_update_success / num_update))
 
-    print('Total: {}'.format(num_total))
-    print('Total success: {}'.format(num_total_success))
-    print('Total success rate is: {}'.format(total_success_rate))
-
-    time_end = time.time()
-    print('Elapsed time of partitioning training images: {}'.format(
-        time_end - time_start))
+def tune_partition_parameter():
+    h_tol = np.arange(3, 7)
+    s_tol = np.arange(20, 40, 4)
+    v_tol = np.arange(20, 60, 4)
+    rate = np.zeros((len(h_tol), len(s_tol), len(v_tol)))
+    for h in h_tol:
+        for s in s_tol:
+            for v in v_tol:
+                recognizer = CaptchaRecognizer(h / 360, s / 100, v / 100)
+                rate[
+                    h - 3, s / 4 - 5, v / 4 - 5] = \
+                    partition_training_images_to_chars(recognizer,
+                                                       force_update=True,
+                                                       save=False)
+    print(rate)
+    return rate

@@ -87,13 +87,10 @@ def _show_image(img, cmap=_cm_greys, title=None):
 
 
 class CaptchaRecognizer:
-    def __init__(self):
-        # TODO: tune the tolerance values
-        self.h_tolerance = 6 / 360
-        self.s_tolerance = 34 / 100
-        self.v_tolerance = 60 / 100
-        self.sep_constant = 0.03  # this means all in one column must be
-        # white, if set to 0.04, bad for 'QN4EL'
+    def __init__(self, h_tol=5 / 360, s_tol=34 / 100, v_tol=60 / 100):
+        self.h_tolerance = h_tol
+        self.s_tolerance = s_tol
+        self.v_tolerance = v_tol
         self.character_num = captcha_source.captcha_length
         # TODO: adjust the values below
         self.char_width_std = 15
@@ -254,23 +251,6 @@ class CaptchaRecognizer:
         # np.savetxt(c.temp_path('labels.txt'), labels, fmt='%d')
         object_slices = ndimage.find_objects(labels)
         return labels, object_slices
-
-    def find_vertical_separation_line(self, img):
-        sep_line_list = []
-        sep_line_list_final = []
-        new_img = img.copy()
-        height, width = img.shape
-        for x in range(width):
-            if np.count_nonzero(img[:, x]) / height < self.sep_constant:
-                sep_line_list.append(x)
-                new_img[:, x] = 0.5
-        for i in range(len(sep_line_list)):
-            if i == 0 or sep_line_list[i] == (width - 1) or sep_line_list[i] - \
-                    sep_line_list[i - 1] != 1:
-                if i != 0 and sep_line_list[i] != (width - 1):
-                    sep_line_list_final.append(sep_line_list[i - 1])
-                sep_line_list_final.append(sep_line_list[i])
-        return [new_img, sep_line_list_final]
 
     def cut_images_by_floodfill(self, img):
         height, width = img.shape
