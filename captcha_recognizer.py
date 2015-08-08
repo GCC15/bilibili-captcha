@@ -92,9 +92,7 @@ class CaptchaRecognizer:
         self.v_tolerance = v_tol
         self.character_num = captcha_source.captcha_length
         # TODO: adjust the values below
-        self.char_width_std = 15
-        self.char_height_std = 30
-        self.char_width_min = 5
+        self.char_width_min = 6
         self.char_width_max = 30
         self.char_height_min = 15
         self.char_height_max = 30
