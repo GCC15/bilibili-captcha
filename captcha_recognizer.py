@@ -228,7 +228,6 @@ class CaptchaRecognizer:
                     continue
                 s = (slice(dy + 1, dy - 1 if dy - 1 else None),
                      slice(dx + 1, dx - 1 if dx - 1 else None))
-                # print(s)
                 img_pad_sum[s] += img
                 img_pad_a[s] += img == 1
                 img_pad_b[s] += np.logical_and(img > 0, img < 1)
@@ -240,7 +239,7 @@ class CaptchaRecognizer:
         new_img = img.copy()
         mask = np.logical_and(img == 0, img_pad_a + img_pad_b >= neighbor_high)
         new_img[mask] = img_pad_sum[mask] / 8
-        new_img[img * 2 > img_pad_sum] = 0
+        new_img[img * 1.3 > img_pad_sum] = 0
         new_img[img_pad_a <= neighbor_low] = 0
         return new_img
 
