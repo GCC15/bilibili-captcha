@@ -270,19 +270,22 @@ def partition_training_images_to_chars(captcha_recognizer, force_update=False,
     return total_success_rate
 
 
+# The best parameter combination now is (6,36,40)
 def tune_partition_parameter():
-    h_tol = np.arange(3, 7)
-    s_tol = np.arange(20, 40, 4)
-    v_tol = np.arange(20, 60, 4)
+    h_tol = np.arange(4, 5)
+    s_tol = np.arange(28, 32, 4)
+    v_tol = np.arange(32, 36, 4)
     rate = np.zeros((len(h_tol), len(s_tol), len(v_tol)))
     for h in h_tol:
         for s in s_tol:
             for v in v_tol:
                 recognizer = CaptchaRecognizer(h / 360, s / 100, v / 100)
                 rate[
-                    h - 3, s / 4 - 5, v / 4 - 5] = \
+                    h - 4, s / 4 - 7, v / 4 - 8] = \
                     partition_training_images_to_chars(recognizer,
                                                        force_update=True,
                                                        save=False)
-    print(rate)
+    print(np.unravel_index(rate.argmax(),rate.shape))
+    print(rate.max())
+    np.save(os.path.join(_dataset_dir,'gridsearch.npy'),rate)
     return rate

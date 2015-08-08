@@ -87,7 +87,7 @@ def _show_image(img, cmap=_cm_greys, title=None):
 
 
 class CaptchaRecognizer:
-    def __init__(self, h_tol=5 / 360, s_tol=34 / 100, v_tol=60 / 100):
+    def __init__(self, h_tol=6 / 360, s_tol=36 / 100, v_tol=40 / 100):
         self.h_tolerance = h_tol
         self.s_tolerance = s_tol
         self.v_tolerance = v_tol
