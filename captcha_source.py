@@ -1,4 +1,5 @@
 # A source from which we fetch captcha images
+# TODO: interactive test
 
 import requests
 from io import BytesIO

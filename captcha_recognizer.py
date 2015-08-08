@@ -9,8 +9,6 @@ import matplotlib.colors as colors
 import matplotlib.image as mpimg
 import numpy as np
 import numpy.linalg as la
-# import skimage.morphology as morph
-# import skimage.segmentation as seg
 from scipy import ndimage
 
 
@@ -272,7 +270,7 @@ class CaptchaRecognizer:
         print(region_point)
 
     # https://en.wikipedia.org/wiki/Simulated_annealing
-    def anneal(self, img, num_steps=500):
+    def anneal(self, img, num_steps=1000):
         np.seterr(divide='ignore', invalid='ignore')
         height, width = img.shape
         # TODO: Use RGB for now, just for visualization
@@ -293,11 +291,13 @@ class CaptchaRecognizer:
         # _show_image(new_img)
         # TODO: Just for testing
         E = 0
+        # step_list= []
+        # E_list = []
         # for p in range(num_positions):
         #     for q in range(p + 1, num_positions):
-        #         E += _LJ(la.norm(positions[q] - positions[p]))
+        #         E += _lj(la.norm(positions[q] - positions[p]))
         for step in range(num_steps):
-            beta = 10 + step / 50
+            beta = (3 + step / 1000) * 1e-6
             # Choose a position randomly, and invert the state
             p = np.random.randint(num_positions)
             y, x = positions[p]
@@ -316,7 +316,14 @@ class CaptchaRecognizer:
                 new_img[y, x, 0] = particles[p]
             if step % 50 == 0:
                 print('Step {}. beta {}. E {}'.format(step, beta, E))
-                # _show_image(new_img, title=step)
+                # step_list.append(step)
+                # E_list.append(E)
+                # _show_image(new_img, title=step, interp='none')
                 # plt.pause(0.1)
         # plt.ioff()
+        # plt.clf()
+        # plt.plot(step_list, E_list, '*-')
+        # plt.xlabel('step')
+        # plt.ylabel('Energy')
+        # plt.show()
         return new_img
