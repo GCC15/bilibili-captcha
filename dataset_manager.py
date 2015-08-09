@@ -91,7 +91,8 @@ def _fetch_captchas_to_dir(directory, num=1, use_https=False):
 
 
 def clear_training_set():
-    c.clear_dir(_training_set_dir)
+    pass  # for safety reason
+    # c.clear_dir(_training_set_dir)
 
 
 def clear_training_chars():

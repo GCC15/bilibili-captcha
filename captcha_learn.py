@@ -5,7 +5,7 @@ import numpy
 import theano
 import theano.tensor as T
 
-_std_height = 20 #TODO: Is this correct?
+_std_height = 20 # TODO: Is this correct?
 _std_width = 15
 
 
@@ -513,7 +513,8 @@ def load_data():
 
 
 def main():
-    inputs, targets = load_data()
+    dataset = load_data()
+    inputs, targets = dataset
     print(inputs.shape)
     print(targets.shape)
     import captcha_recognizer

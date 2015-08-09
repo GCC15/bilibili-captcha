@@ -8,6 +8,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import skimage.morphology as morph
+
+
 # import skimage.segmentation as seg
 
 
@@ -47,6 +49,7 @@ def main():
 
     # img_04 = recognizer.anneal(img_03a)
     # mpimg.imsave(c.temp_path('04.anneal.png'), img_04)
+
 
 if __name__ == '__main__':
     main()

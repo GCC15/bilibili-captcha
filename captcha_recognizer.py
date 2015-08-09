@@ -37,18 +37,6 @@ def _lj(r, delta=4):
     return np.power(delta / r, 12) - 2 * np.power(delta / r, 6)
 
 
-# # https://en.wikipedia.org/wiki/Moore_neighborhood
-# def _chebyshev_neighbors(r=1):
-#     d = range(-r, r + 1)
-#     neighbors = []
-#     for dy in d:
-#         for dx in d:
-#             if dy == 0 and dx == 0:
-#                 continue
-#             neighbors.append((dy, dx))
-#     return neighbors
-#
-#
 # # https://en.wikipedia.org/wiki/Von_Neumann_neighborhood
 # def _manhattan_neighbors(r=1):
 #     neighbors = []
