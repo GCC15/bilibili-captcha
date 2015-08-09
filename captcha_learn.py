@@ -1,14 +1,13 @@
 import dataset_manager
 import captcha_source
-import os
-import sys
 import timeit
 import numpy
 import theano
 import theano.tensor as T
 
-_std_height = 20
+_std_height = 20 #TODO: Is this correct?
 _std_width = 15
+
 
 # Reference:
 # http://deeplearning.net/tutorial/logreg.html
@@ -214,7 +213,7 @@ class HiddenLayer(object):
 class MLP(object):
     """Multi-Layer Perceptron Class
 
-    A multilayer perceptron is a feedforward artificial neural network model
+    A multilayer perceptron is a feed-forward artificial neural network model
     that has one layer or more of hidden units and nonlinear activations.
     Intermediate layers usually have as activation function tanh or the
     sigmoid function (defined here by a ``HiddenLayer`` class)  while the
@@ -234,7 +233,7 @@ class MLP(object):
 
         :type n_in: int
         :param n_in: number of input units, the dimension of the space in
-        which the datapoints lie
+        which the data points lie
 
         :type n_hidden: int
         :param n_hidden: number of hidden units
@@ -253,7 +252,7 @@ class MLP(object):
             input=input,
             n_in=n_in,
             n_out=n_hidden,
-            activation=T.tanh # could be T.nnet.sigmoid
+            activation=T.tanh  # could be T.nnet.sigmoid
         )
 
         # The logistic regression layer gets as input the hidden units
@@ -295,7 +294,8 @@ class MLP(object):
         self.input = input
 
 
-def test_mlp(datasets, learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001, n_epochs=1000,
+def test_mlp(datasets, learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001,
+             n_epochs=1000,
              batch_size=20, n_hidden=500):
     """
     Demonstrate stochastic gradient descent optimization for a multilayer
@@ -330,17 +330,13 @@ def test_mlp(datasets, learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001, n_epochs=
     n_train_batches = train_set_x.get_value(borrow=True).shape[0] / batch_size
     n_valid_batches = valid_set_x.get_value(borrow=True).shape[0] / batch_size
     n_test_batches = test_set_x.get_value(borrow=True).shape[0] / batch_size
-
-    ######################
-    # BUILD ACTUAL MODEL #
-    ######################
     print('... building the model')
 
     # allocate symbolic variables for the data
     index = T.lscalar()  # index to a [mini]batch
     x = T.matrix('x')  # the data is presented as rasterized images
     y = T.ivector('y')  # the labels are presented as 1D vector of
-                        # [int] labels
+    # [int] labels
 
     rng = numpy.random.RandomState(1234)
 
@@ -348,9 +344,9 @@ def test_mlp(datasets, learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001, n_epochs=
     classifier = MLP(
         rng=rng,
         input=x,
-        n_in=28 * 28, # need to be changed
+        n_in=_std_height * _std_width,
         n_hidden=n_hidden,
-        n_out=10 # need to be changed (probably 26)
+        n_out=len(captcha_source.chars)
     )
 
     # the cost we minimize during training is the negative log likelihood of
@@ -382,7 +378,7 @@ def test_mlp(datasets, learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001, n_epochs=
         }
     )
 
-    # compute the gradient of cost with respect to theta (sotred in params)
+    # compute the gradient of cost with respect to theta (sorted in params)
     # the resulting gradients will be stored in a list gparams
     gparams = [T.grad(cost, param) for param in classifier.params]
 
@@ -396,7 +392,7 @@ def test_mlp(datasets, learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001, n_epochs=
     updates = [
         (param, param - learning_rate * gparam)
         for param, gparam in zip(classifier.params, gparams)
-    ]
+        ]
 
     # compiling a Theano function `train_model` that returns the cost, but
     # in the same time updates the parameter of the model based on the rules
@@ -416,14 +412,14 @@ def test_mlp(datasets, learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001, n_epochs=
     # early-stopping parameters
     patience = 10000  # look as this many examples regardless
     patience_increase = 2  # wait this much longer when a new best is
-                           # found
+    # found
     improvement_threshold = 0.995  # a relative improvement of this much is
-                                   # considered significant
+    # considered significant
     validation_frequency = min(n_train_batches, patience / 2)
-                                  # go through this many
-                                  # minibatche before checking the network
-                                  # on the validation set; in this case we
-                                  # check every epoch
+    # go through this many
+    # minibatches before checking the network
+    # on the validation set; in this case we
+    # check every epoch
 
     best_validation_loss = numpy.inf
     best_iter = 0
@@ -434,7 +430,7 @@ def test_mlp(datasets, learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001, n_epochs=
     done_looping = False
 
     while (epoch < n_epochs) and (not done_looping):
-        epoch = epoch + 1
+        epoch += 1
         for minibatch_index in range(n_train_batches):
 
             minibatch_avg_cost = train_model(minibatch_index)
@@ -459,10 +455,10 @@ def test_mlp(datasets, learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001, n_epochs=
 
                 # if we got the best validation score until now
                 if this_validation_loss < best_validation_loss:
-                    #improve patience if loss improvement is good enough
+                    # improve patience if loss improvement is good enough
                     if (
-                        this_validation_loss < best_validation_loss *
-                        improvement_threshold
+                                this_validation_loss < best_validation_loss *
+                                improvement_threshold
                     ):
                         patience = max(patience, iter * patience_increase)
 
@@ -487,6 +483,7 @@ def test_mlp(datasets, learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001, n_epochs=
     print(('Optimization complete. Best validation score of %f %% '
            'obtained at iteration %i, with test performance %f %%') %
           (best_validation_loss * 100., best_iter + 1, test_score * 100.))
+    print('Time used for testing the mlp is', start_time - end_time)
 
 
 def load_data():
@@ -514,10 +511,9 @@ def load_data():
     # the number of rows in the input. It should give the target
     # target to the example with the same index in the input.
 
+
 def main():
-    # TODO: design our own load_data(dataset) or whatever API we use
-    dataset = load_data()
-    inputs, targets = dataset
+    inputs, targets = load_data()
     print(inputs.shape)
     print(targets.shape)
     import captcha_recognizer
@@ -526,7 +522,7 @@ def main():
             inputs[numpy.random.rand() * inputs.shape[0]],
             (_std_height, _std_width)
         ),
-        interp='none'
+        interp='nearest'
     )
     print(numpy.unique(targets))
     # test_mlp(dataset)
