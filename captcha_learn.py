@@ -489,9 +489,7 @@ def test_mlp(datasets, learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001,
 def load_data():
     input_list = []
     target_list = []
-    num_cats = len(captcha_source.chars)
-    cats = numpy.arange(num_cats, dtype=int)
-    for cat in cats:
+    for cat in range(len(captcha_source.chars)):
         char = captcha_source.chars[cat]
         char_images = dataset_manager.get_training_char_images(char)
         for image in char_images:
