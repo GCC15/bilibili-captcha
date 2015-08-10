@@ -4,6 +4,7 @@ import timeit
 import numpy
 import theano
 import theano.tensor as T
+from sklearn.cross_validation import StratifiedShuffleSplit
 
 _std_height = 20 # TODO: Is this correct?
 _std_width = 15
@@ -296,7 +297,7 @@ class MLP(object):
 
 def test_mlp(datasets, learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001,
              n_epochs=1000,
-             batch_size=20, n_hidden=500):
+             batch_size=20, n_hidden=200):
     """
     Demonstrate stochastic gradient descent optimization for a multilayer
     perceptron
@@ -322,17 +323,63 @@ def test_mlp(datasets, learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001,
     :param datasets: a list of matrix,
 
    """
-    train_set_x, train_set_y = datasets[0]
-    valid_set_x, valid_set_y = datasets[1]
-    test_set_x, test_set_y = datasets[2]
+    inputs, targets = datasets
+    temp_train_set_x = []
+    temp_train_set_y = []
+    train_set_x = []
+    train_set_y = []
+    valid_set_x = []
+    valid_set_y = []
+    test_set_x = []
+    test_set_y = []
+
+    # stratified k-fold to split test and temporary train, which contains valid and train
+    skf = StratifiedShuffleSplit(targets, 1, 0.2, random_state=0)
+    for temp_train_index, test_index in skf:
+        # print("TEMP_TRAIN:", temp_train_index, "TEST:", test_index)
+        temp_train_set_x.append(inputs[temp_train_index])
+        temp_train_set_y.append(targets[temp_train_index])
+        test_set_x.append(inputs[test_index])
+        test_set_y.append(targets[test_index])
+
+    # convert from list-wrapping array to array
+    test_set_x = test_set_x[0]
+    test_set_y = test_set_y[0]
+    temp_train_set_x = temp_train_set_x[0]
+    temp_train_set_y = temp_train_set_y[0]
+    print("test_set_x shape: " + str(test_set_x.shape))
+    print("test_set_y shape: " + str(test_set_y.shape))
+    print("temp_train_set_x shape: " + str(temp_train_set_x.shape))
+    print("temp_train_set_y shape: " + str(temp_train_set_y.shape))
+
+    # stratified k-fold to split valid and train
+    skf = StratifiedShuffleSplit(temp_train_set_y, 1, 0.25, random_state=0)
+    for train_index, valid_index in skf:
+        # print("TRAIN:", train_index, "VALID:", valid_index)
+        train_set_x.append(temp_train_set_x[train_index])
+        train_set_y.append(temp_train_set_y[train_index])
+        valid_set_x.append(temp_train_set_x[valid_index])
+        valid_set_y.append(temp_train_set_y[valid_index])
+
+    # convert to array
+    train_set_x = train_set_x[0]
+    train_set_y = train_set_y[0]
+    valid_set_x = valid_set_x[0]
+    valid_set_y = valid_set_y[0]
+    print("train_set_x shape: " + str(train_set_x.shape))
+    print("train_set_y shape: " + str(train_set_y.shape))
+    print("valid_set_x shape: " + str(valid_set_x.shape))
+    print("valid_set_y shape: " + str(valid_set_y.shape))
 
     # compute number of minibatches for training, validation and testing
-    n_train_batches = train_set_x.get_value(borrow=True).shape[0] / batch_size
-    n_valid_batches = valid_set_x.get_value(borrow=True).shape[0] / batch_size
-    n_test_batches = test_set_x.get_value(borrow=True).shape[0] / batch_size
+    n_train_batches = train_set_x.shape[0] / batch_size
+    n_valid_batches = valid_set_x.shape[0] / batch_size
+    n_test_batches = test_set_x.shape[0] / batch_size
+
     print('... building the model')
 
     # allocate symbolic variables for the data
+    # TODO: What do these three lines mean?
     index = T.lscalar()  # index to a [mini]batch
     x = T.matrix('x')  # the data is presented as rasterized images
     y = T.ivector('y')  # the labels are presented as 1D vector of
@@ -513,8 +560,8 @@ def load_data():
 def main():
     dataset = load_data()
     inputs, targets = dataset
-    print(inputs.shape)
-    print(targets.shape)
+    print("Input Shape: " + str(inputs.shape))
+    print("Target Shape: " + str(targets.shape))
     import captcha_recognizer
     captcha_recognizer._show_image(
         numpy.reshape(
