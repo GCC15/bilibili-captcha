@@ -12,6 +12,7 @@ captcha_length = 5
 chars = '    EFGH JKLMN PQR TUVWXY  123456 89'.replace(' ', '')
 charset = set(chars)
 session = None
+cookie = None
 
 def _get_captcha_url(use_https=False):
     return ('https' if use_https else 'http') + '://www.bilibili.com/captcha'
@@ -23,15 +24,20 @@ def canonicalize(seq):
 
 def fetch_image(use_https=False, retry_limit=3):
     global session
+    global cookie
     session = requests.session()
     url = _get_captcha_url(use_https)
+    header = {
+        'User-Agent': "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:34.0) Gecko/20100101 Firefox/34.0",
+    }
     print('Fetching CAPTCHA image from {}'.format(url))
     r = None
     for num_retries in range(retry_limit):
         if num_retries > 0:
             print('num_retries = {}'.format(num_retries))
         try:
-            r = session.get(url)
+            r = session.get(url, headers=header)
+            cookie = r.request.headers['cookie']
             break
         except Exception as e:
             print(e)
@@ -41,8 +47,8 @@ def fetch_image(use_https=False, retry_limit=3):
 # TODO: Bugs, probably need header and cookie
 def fill_captcha(use_https=False):
     image = fetch_image(use_https)
-    if session is None:
-        raise ValueError('No session found')
+    if session is None or cookie is None:
+        raise ValueError('No session or session id found')
     plt.ion()
     plt.show()
     plt.clf()
@@ -57,8 +63,16 @@ def fill_captcha(use_https=False):
     plt.ioff()
     #captcha = captcha_recognizer.CaptchaRecognizer().recognize(image)
     url = 'https' if use_https else 'http' + '://account.bilibili.com/register/mail'
-    data = {'vd': captcha, 'action': 'checkVd'}
-    r = session.post(url, data=data)
+    header = {
+        'User-Agent': "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:34.0) Gecko/20100101 Firefox/34.0",
+        'Host': "account.bilibili.com",
+        'Referer': url,
+        'Cookie': cookie,
+        'Origin': 'http://account.bilibili.com'
+    }
+    data = {'vd': captcha, 'action': "checkVd"}
+    print(cookie)
+    r = session.post(url, headers=header, data=data)
     print(r.json())
     if r.json()['status'] == 'false':
         return False
