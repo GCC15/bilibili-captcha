@@ -152,7 +152,7 @@ class CaptchaRecognizer:
         char_images = self.partition(img, save_intermediate, verbose)
 
         # TODO: hand over to the neural network
-
+        # Should return the captch as a string
         return
 
     # Convert to a grayscale image using HSV
