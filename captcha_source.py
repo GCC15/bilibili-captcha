@@ -14,6 +14,7 @@ charset = set(chars)
 session = None
 cookie = None
 
+
 def _get_captcha_url(use_https=False):
     return ('https' if use_https else 'http') + '://www.bilibili.com/captcha'
 
@@ -37,7 +38,8 @@ def fetch_image(use_https=False, retry_limit=3):
             print('num_retries = {}'.format(num_retries))
         try:
             r = session.get(url, headers=header)
-            cookie = r.request.headers['cookie']
+            # print(r.request.headers)
+            # cookie = r.request.headers['cookie']
             break
         except Exception as e:
             print(e)
@@ -45,9 +47,9 @@ def fetch_image(use_https=False, retry_limit=3):
 
 
 # TODO: Bugs, probably need header and cookie
-def fill_captcha(use_https=False):
+def fill_captcha(use_https=True):
     image = fetch_image(use_https)
-    if session is None or cookie is None:
+    if session is None:# or cookie is None:
         raise ValueError('No session or session id found')
     plt.ion()
     plt.show()
@@ -62,17 +64,19 @@ def fill_captcha(use_https=False):
             break
     plt.ioff()
     #captcha = captcha_recognizer.CaptchaRecognizer().recognize(image)
-    url = 'https' if use_https else 'http' + '://account.bilibili.com/register/mail'
+    url = ('https' if use_https else 'http') + '://account.bilibili.com/register/mail'
     header = {
         'User-Agent': "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:34.0) Gecko/20100101 Firefox/34.0",
         'Host': "account.bilibili.com",
         'Referer': url,
-        'Cookie': cookie,
-        'Origin': 'http://account.bilibili.com'
+        # 'Cookie': cookie,
+        'Origin': ('https' if use_https else 'http') +  '://account.bilibili.com'
     }
     data = {'vd': captcha, 'action': "checkVd"}
-    print(cookie)
+    # print(cookie)
     r = session.post(url, headers=header, data=data)
+    print(r.request.headers)
+    print(data)
     print(r.json())
     if r.json()['status'] == 'false':
         return False
