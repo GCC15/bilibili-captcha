@@ -7,7 +7,7 @@ import time
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import numpy as np
-import captcha_source
+from captcha_source import CaptchaSource
 import config as c
 from captcha_recognizer import CaptchaRecognizer
 import helper
@@ -30,10 +30,11 @@ _FAIL = 'fail'
 _SUCCESS = 'success'
 
 _SEQ_SKIP = '0'
+_source = CaptchaSource()
 
 
 def _contain_invalid_char(seq):
-    return any(char not in captcha_source.charset for char in seq)
+    return any(char not in _source.charset for char in seq)
 
 
 def _get_training_char_dir(char):
@@ -43,7 +44,7 @@ def _get_training_char_dir(char):
 c.make_dirs(_training_set_dir)
 c.make_dirs(_training_char_dir)
 c.make_dirs(_test_set_dir)
-for _char in captcha_source.chars:
+for _char in _source.chars:
     c.make_dirs(_get_training_char_dir(_char))
 
 
@@ -56,7 +57,7 @@ def _fetch_captchas_to_dir(directory, num=1):
     plt.ion()
     plt.show()
     for i in range(num):
-        img = captcha_source.fetch_captcha()
+        img = _source.fetch_captcha()
         plt.clf()
         plt.axis('off')
         plt.imshow(img)
@@ -73,7 +74,7 @@ def _fetch_captchas_to_dir(directory, num=1):
             if seq == _SEQ_SKIP:
                 break
             seq = helper.canonicalize(seq)
-            if (len(seq) != captcha_source.captcha_length or
+            if (len(seq) != _source.captcha_length or
                     _contain_invalid_char(seq)):
                 print('Invalid sequence!')
             else:
@@ -96,7 +97,7 @@ def clear_training_set():
 
 def clear_training_chars():
     for directory in (os.listdir(_training_char_dir)):
-        if directory in captcha_source.chars:
+        if directory in _source.chars:
             c.clear_dir(os.path.join(_training_char_dir, directory))
 
 
@@ -207,7 +208,7 @@ def partition_training_images_to_chars(captcha_recognizer=CaptchaRecognizer(),
     if force_update:
         json_dict[_FAIL] = []
         json_dict[_SUCCESS] = []
-        for char in captcha_source.chars:
+        for char in _source.chars:
             json_dict[_NUM_CHAR.format(char)] = 0
     seqs = _list_basename(_training_set_dir)
     num_total = len(seqs)
@@ -284,7 +285,8 @@ def tune_partition_parameter():
     for h in h_tol:
         for s in s_tol:
             for v in v_tol:
-                recognizer = CaptchaRecognizer(h / 360, s / 100, v / 100)
+                recognizer = CaptchaRecognizer(_source, h / 360, s / 100,
+                                               v / 100)
                 rate[
                     h - 6, s - 36, v - 40] = \
                     partition_training_images_to_chars(recognizer,

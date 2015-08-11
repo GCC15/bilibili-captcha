@@ -3,7 +3,7 @@
 import config as c
 import dataset_manager
 import captcha_recognizer
-from captcha_recognizer import _time_func, _repeat, _cm_greys
+from helper import time_func, repeat, _cm_greys
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
@@ -28,13 +28,13 @@ def main():
     mpimg.imsave(c.temp_path('01.hsv.png'), img_01, cmap=_cm_greys)
 
     # 2
-    img_02 = _time_func(
+    img_02 = time_func(
         'remove_noise_with_neighbors',
-        lambda: _repeat(recognizer.remove_noise_with_neighbors, 2)(img_01)
+        lambda: repeat(recognizer.remove_noise_with_neighbors, 2)(img_01)
     )
     mpimg.imsave(c.temp_path('02.neighbor.png'), img_02, cmap=_cm_greys)
 
-    img_03a = _time_func(
+    img_03a = time_func(
         'skeletonize',
         lambda: morph.skeletonize(img_02)
     )

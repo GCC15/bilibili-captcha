@@ -1,24 +1,29 @@
 # Handle image processing before giving over to captcha learner
 
 import config as c
-import captcha_source
 import matplotlib.colors as colors
 import matplotlib.image as mpimg
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy import ndimage
 import helper
+from captcha_source import CaptchaSource
 
 # Color map for grayscale images
 _cm_greys = plt.cm.get_cmap('Greys')
 
 
 class CaptchaRecognizer:
-    def __init__(self, h_tol=6 / 360, s_tol=36 / 100, v_tol=40 / 100):
+    def __init__(self, source=CaptchaSource(), h_tol=6 / 360, s_tol=36 / 100,
+                 v_tol=40 / 100):
+        # Three parameters to be used in remove_noise_with_hsv
         self.h_tolerance = h_tol
         self.s_tolerance = s_tol
         self.v_tolerance = v_tol
-        self.character_num = captcha_source.captcha_length
+
+        self.character_num = source.captcha_length
+
+        # Four parameters to be used in partition
         self.char_width_min = 5
         self.char_width_max = 30
         self.char_height_min = 10
@@ -89,6 +94,7 @@ class CaptchaRecognizer:
             print('Warning: partition failed!')
         return None
 
+    # Recognize the captcha
     def recognize(self, img, save_intermediate=False, verbose=False):
         char_images = self.partition(img, save_intermediate, verbose)
 
@@ -109,7 +115,6 @@ class CaptchaRecognizer:
         std_color = color_array[1]
         std_b, mod = divmod(std_color, 256 ** 2)
         std_g, std_r = divmod(mod, 256)
-        # print([std_r, std_g, std_b])
         # noinspection PyTypeChecker
         std_h, std_s, std_v = colors.rgb_to_hsv(
             np.array([std_r, std_g, std_b]) / 255

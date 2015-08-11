@@ -1,14 +1,15 @@
 import dataset_manager
-import captcha_source
+from captcha_source import CaptchaSource
 import timeit
 import numpy
 import theano
 import theano.tensor as T
 from sklearn.cross_validation import StratifiedShuffleSplit
+import helper
 
 _std_height = 20
 _std_width = 15
-
+_source = CaptchaSource()
 
 # Reference:
 # http://deeplearning.net/tutorial/logreg.html
@@ -333,7 +334,8 @@ def test_mlp(datasets, learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001,
     test_set_x = []
     test_set_y = []
 
-    # stratified k-fold to split test and temporary train, which contains valid and train
+    # stratified k-fold to split test and temporary train, which contains
+    # valid and train
     skf = StratifiedShuffleSplit(targets, 1, 0.2, random_state=0)
     for temp_train_index, test_index in skf:
         # print("TEMP_TRAIN:", temp_train_index, "TEST:", test_index)
@@ -393,7 +395,7 @@ def test_mlp(datasets, learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001,
         input=x,
         n_in=_std_height * _std_width,
         n_hidden=n_hidden,
-        n_out=len(captcha_source.chars)
+        n_out=len(_source.chars)
     )
 
     # the cost we minimize during training is the negative log likelihood of
@@ -536,12 +538,12 @@ def test_mlp(datasets, learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001,
 def load_data():
     input_list = []
     target_list = []
-    for cat in range(len(captcha_source.chars)):
-        char = captcha_source.chars[cat]
+    for cat in range(len(_source.chars)):
+        char = _source.chars[cat]
         char_images = dataset_manager.get_training_char_images(char)
         for image in char_images:
             target_list.append(cat)
-            input_list.append(dataset_manager.resize(
+            input_list.append(helper.resize(
                 image, _std_height, _std_width
             ).flatten())
     inputs = numpy.array(input_list)
@@ -563,9 +565,9 @@ def main():
     print("Input Shape: " + str(inputs.shape))
     print("Target Shape: " + str(targets.shape))
     import captcha_recognizer
-    captcha_recognizer._show_image(
+    helper.show_image(
         numpy.reshape(
-            inputs[numpy.random.rand() * inputs.shape[0]],
+            inputs[numpy.random.rand(1, 1) * inputs.shape[0]],
             (_std_height, _std_width)
         ),
         interp='nearest'

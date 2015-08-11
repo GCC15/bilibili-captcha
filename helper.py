@@ -7,8 +7,6 @@ import matplotlib.pyplot as plt
 import random
 import scipy as sp
 import scipy.misc
-from captcha_recognizer import CaptchaRecognizer
-import dataset_manager
 
 
 # A generic function timer
@@ -88,7 +86,7 @@ def anneal(img, num_steps=1000):
     print('{} Positions'.format(num_positions))
     particles = np.ones(num_positions, dtype=bool)
     # plt.ion()
-    # _show_image(new_img)
+    # show_image(new_img)
     # TODO: Just for testing
     E = 0
     # step_list= []
@@ -118,7 +116,7 @@ def anneal(img, num_steps=1000):
             print('Step {}. beta {}. E {}'.format(step, beta, E))
             # step_list.append(step)
             # E_list.append(E)
-            # _show_image(new_img, title=step, interp='none')
+            # show_image(new_img, title=step, interp='none')
             # plt.pause(0.1)
     # plt.ioff()
     # plt.clf()

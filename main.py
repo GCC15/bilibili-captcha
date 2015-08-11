@@ -3,23 +3,32 @@
 import config as c
 import dataset_manager
 from captcha_recognizer import CaptchaRecognizer
-import captcha_source
+from captcha_source import CaptchaSource
 
 
 def main():
     # dataset_manager.fetch_training_set(100)
-    test_captcha_recognition()
+    # test_captcha_recognition()
     # dataset_manager.partition_training_images_to_chars()
-    # dataset_manager.partition_training_images_to_chars(force_update=True, save=False)
+    dataset_manager.partition_training_images_to_chars(force_update=True, save=True)
     # dataset_manager.tune_partition_parameter()
-    # captcha_source.fill_captcha()
+    # CaptchaSource().fill_captcha()
 
 
 def test_captcha_recognition():
     c.clear_temp()
     seq = None
-    # seq = 'QN4EL'
+
+    # Below are all the training images that are partitioned falsely
     # seq = 'YFF5M'
+    # seq = 'W1PM4'
+    # seq = 'W1R4R'
+    # seq = 'YTM6X'
+    # seq = 'W9WU4'
+    # seq = 'EFTWY'
+    # seq = '5WTGP'
+    # seq = '113W2'
+    # seq = 'UWFG1'
 
     # Sticking together
     # seq = 'WMQPQ'
