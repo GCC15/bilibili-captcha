@@ -2,73 +2,15 @@
 
 import config as c
 import captcha_source
-import random
-import time
-import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 import matplotlib.image as mpimg
+import matplotlib.pyplot as plt
 import numpy as np
-import numpy.linalg as la
 from scipy import ndimage
-
-
-# A generic function timer
-def _time_func(tag, func):
-    t0 = time.time() if tag else None
-    ret = func()
-    if tag:
-        t1 = time.time()
-        print('Time for {}: {}'.format(tag, t1 - t0))
-    return ret
-
-
-# Compose a single-argument function n times
-def _repeat(func, n):
-    def ret(x):
-        for i in range(n):
-            x = func(x)
-        return x
-
-    return ret
-
-
-# https://en.wikipedia.org/wiki/Lennard-Jones_potential
-def _lj(r, delta=4):
-    return np.power(delta / r, 12) - 2 * np.power(delta / r, 6)
-
-
-# # https://en.wikipedia.org/wiki/Von_Neumann_neighborhood
-# def _manhattan_neighbors(r=1):
-#     neighbors = []
-#     for dy in range(-r, r + 1):
-#         xx = r - abs(dy)
-#         for dx in range(-xx, xx + 1):
-#             if dy == 0 and dx == 0:
-#                 continue
-#             neighbors.append((dy, dx))
-#     return neighbors
-
-
-# E.g. _sort_by_occurrence(np.array([1, 3, 3, 1, 2, 2, 2, 3, 4, 2]))
-# Return: array([2, 3, 1, 4])
-def _sort_by_occurrence(arr):
-    u, counts = np.unique(arr, return_counts=True)
-    sort_index = counts.argsort()[::-1]
-    return u[sort_index]
-
+import helper
 
 # Color map for grayscale images
 _cm_greys = plt.cm.get_cmap('Greys')
-
-
-# Show image in matplotlib window
-def _show_image(img, cmap=_cm_greys, title=None, interp=None):
-    plt.clf()
-    plt.axis('off')
-    plt.imshow(img, cmap=cmap, interpolation=interp)
-    if title:
-        plt.title(title)
-    plt.show()
 
 
 class CaptchaRecognizer:
@@ -77,9 +19,9 @@ class CaptchaRecognizer:
         self.s_tolerance = s_tol
         self.v_tolerance = v_tol
         self.character_num = captcha_source.captcha_length
-        self.char_width_min = 6
+        self.char_width_min = 5
         self.char_width_max = 30
-        self.char_height_min = 15
+        self.char_height_min = 10
         self.char_height_max = 30
 
     # Try to partition a CAPTCHA into each char image
@@ -89,7 +31,7 @@ class CaptchaRecognizer:
             mpimg.imsave(c.temp_path('00.origin.png'), img)
 
         # 1
-        img_01 = _time_func(
+        img_01 = helper.time_func(
             'remove_noise_with_hsv' if verbose else None,
             lambda: self.remove_noise_with_hsv(img)
         )
@@ -97,15 +39,15 @@ class CaptchaRecognizer:
             mpimg.imsave(c.temp_path('01.hsv.png'), img_01, cmap=_cm_greys)
 
         # 2
-        img_02 = _time_func(
+        img_02 = helper.time_func(
             'remove_noise_with_neighbors' if verbose else None,
-            lambda: _repeat(self.remove_noise_with_neighbors, 2)(img_01)
+            lambda: helper.repeat(self.remove_noise_with_neighbors, 2)(img_01)
         )
         if save_intermediate:
             mpimg.imsave(c.temp_path('02.neighbor.png'), img_02, cmap=_cm_greys)
 
         # 3
-        labels, object_slices = _time_func(
+        labels, object_slices = helper.time_func(
             'segment_with_label' if verbose else None,
             lambda: self.segment_with_label(img_02)
         )
@@ -162,7 +104,7 @@ class CaptchaRecognizer:
         # Convert to int so we can sort the colors
         # noinspection PyTypeChecker
         img_int = np.dot(np.rint(img * 255), np.power(256, np.arange(3)))
-        color_array = _sort_by_occurrence(img_int.flatten())
+        color_array = helper.sort_by_occurrence(img_int.flatten())
         # 2nd most frequent
         std_color = color_array[1]
         std_b, mod = divmod(std_color, 256 ** 2)
@@ -228,90 +170,3 @@ class CaptchaRecognizer:
         # np.savetxt(c.temp_path('labels.txt'), labels, fmt='%d')
         object_slices = ndimage.find_objects(labels)
         return labels, object_slices
-
-    def cut_images_by_floodfill(self, img):
-        height, width = img.shape
-        aux_list = []
-        region_point = []
-        for x in range(width):
-            for y in range(height):
-                if img[y, x] == 1:
-                    start = (y, x)
-                    aux_list.append(start)
-                    break
-        while len(aux_list) != 0:
-            (y, x) = aux_list.pop()
-            if (y, x) not in region_point:
-                region_point.append((y, x))
-            if x + 1 < width and img[y, x + 1] == 1 and (
-                    y, x + 1) not in region_point:
-                aux_list.append((y, x + 1))
-            if x - 1 >= 0 and img[y, x - 1] == 1 and (
-                    y, x - 1) not in region_point:
-                aux_list.append((y, x + 1))
-            if y + 1 < height and img[y + 1, x] == 1 and (
-                        y + 1, x) not in region_point:
-                aux_list.append((y + 1, x))
-            if y - 1 >= 0 and img[y - 1, x] == 1 and (
-                        y - 1, x) not in region_point:
-                aux_list.append((y - 1, x))
-        print(region_point)
-
-    # https://en.wikipedia.org/wiki/Simulated_annealing
-    def anneal(self, img, num_steps=1000):
-        np.seterr(divide='ignore', invalid='ignore')
-        height, width = img.shape
-        # TODO: Use RGB for now, just for visualization
-        new_img = np.zeros((height, width, 3))
-        for i in range(3):
-            new_img[:, :, i] = 1 - img.copy()
-        positions = []
-        for y in range(height):
-            for x in range(width):
-                if img[y, x] == 1:
-                    new_img[y, x, 0] = 1
-                    positions.append((y, x))
-        positions = np.array(positions)
-        num_positions = positions.shape[0]
-        print('{} Positions'.format(num_positions))
-        particles = np.ones(num_positions, dtype=bool)
-        # plt.ion()
-        # _show_image(new_img)
-        # TODO: Just for testing
-        E = 0
-        # step_list= []
-        # E_list = []
-        # for p in range(num_positions):
-        #     for q in range(p + 1, num_positions):
-        #         E += _lj(la.norm(positions[q] - positions[p]))
-        for step in range(num_steps):
-            beta = (3 + step / 1000) * 1e-6
-            # Choose a position randomly, and invert the state
-            p = np.random.randint(num_positions)
-            y, x = positions[p]
-            # noinspection PyTypeChecker
-            delta_energy = np.nansum(
-                _lj(la.norm(positions[particles] - positions[p], axis=1)))
-            if particles[p]:
-                delta_energy = -delta_energy
-            if delta_energy < 0:
-                accept = True
-            else:
-                accept = (random.random() < np.exp(-beta * delta_energy))
-            if accept:
-                E += delta_energy
-                particles[p] = not particles[p]
-                new_img[y, x, 0] = particles[p]
-            if step % 50 == 0:
-                print('Step {}. beta {}. E {}'.format(step, beta, E))
-                # step_list.append(step)
-                # E_list.append(E)
-                # _show_image(new_img, title=step, interp='none')
-                # plt.pause(0.1)
-        # plt.ioff()
-        # plt.clf()
-        # plt.plot(step_list, E_list, '*-')
-        # plt.xlabel('step')
-        # plt.ylabel('Energy')
-        # plt.show()
-        return new_img

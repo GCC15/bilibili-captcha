@@ -7,11 +7,10 @@ import time
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import numpy as np
-import scipy as sp
-import scipy.misc
 import captcha_source
 import config as c
 from captcha_recognizer import CaptchaRecognizer
+import helper
 
 _cm_greys = plt.cm.get_cmap('Greys')
 _png = '.png'
@@ -53,11 +52,11 @@ def _get_training_char_path(char, path):
 
 
 # Fetch some CAPTCHA images from a CAPTCHA source to a directory
-def _fetch_captchas_to_dir(directory, num=1, use_https=False):
+def _fetch_captchas_to_dir(directory, num=1):
     plt.ion()
     plt.show()
     for i in range(num):
-        img = captcha_source.fetch_image(use_https)
+        img = captcha_source.fetch_captcha()
         plt.clf()
         plt.axis('off')
         plt.imshow(img)
@@ -68,12 +67,12 @@ def _fetch_captchas_to_dir(directory, num=1, use_https=False):
         plt.pause(1e-2)
 
         while True:
-            seq = input('[{}] Enter the char sequence: '.format(i))
+            seq = input('[{}] Enter the char sequence: '.format(i + 1))
             # To skip a CAPTCHA.
             # Warning: skipping may reduce the quality of the training set.
             if seq == _SEQ_SKIP:
                 break
-            seq = captcha_source.canonicalize(seq)
+            seq = helper.canonicalize(seq)
             if (len(seq) != captcha_source.captcha_length or
                     _contain_invalid_char(seq)):
                 print('Invalid sequence!')
@@ -110,12 +109,12 @@ def clear_test_set():
 #     clear_test_set()
 
 
-def fetch_training_set(num=1, use_https=False):
-    _fetch_captchas_to_dir(_training_set_dir, num, use_https)
+def fetch_training_set(num=1):
+    _fetch_captchas_to_dir(_training_set_dir, num)
 
 
-def fetch_test_set(num=1, use_https=False):
-    _fetch_captchas_to_dir(_test_set_dir, num, use_https)
+def fetch_test_set(num=1):
+    _fetch_captchas_to_dir(_test_set_dir, num)
 
 
 # Get one image from a directory
@@ -193,7 +192,7 @@ def _list_basename(directory):
     return list(map(_remove_suffix, _list_png(directory)))
 
 
-def partition_training_images_to_chars(captcha_recognizer = CaptchaRecognizer(),
+def partition_training_images_to_chars(captcha_recognizer=CaptchaRecognizer(),
                                        force_update=False,
                                        save=True):
     time_start = time.time()
@@ -278,16 +277,16 @@ def partition_training_images_to_chars(captcha_recognizer = CaptchaRecognizer(),
 
 # The best parameter combination now is (6,36,40)
 def tune_partition_parameter():
-    h_tol = np.arange(4, 5)
-    s_tol = np.arange(28, 32, 4)
-    v_tol = np.arange(32, 36, 4)
+    h_tol = [6]
+    s_tol = [36]
+    v_tol = [40]
     rate = np.zeros((len(h_tol), len(s_tol), len(v_tol)))
     for h in h_tol:
         for s in s_tol:
             for v in v_tol:
                 recognizer = CaptchaRecognizer(h / 360, s / 100, v / 100)
                 rate[
-                    h - 4, s / 4 - 7, v / 4 - 8] = \
+                    h - 6, s - 36, v - 40] = \
                     partition_training_images_to_chars(recognizer,
                                                        force_update=True,
                                                        save=False)
@@ -295,10 +294,3 @@ def tune_partition_parameter():
     print(rate.max())
     np.save(os.path.join(_dataset_dir, 'gridsearch.npy'), rate)
     return rate
-
-
-def resize(image, height, width):
-    return sp.misc.imresize(
-        image,
-        (height, width)
-    )
