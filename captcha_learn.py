@@ -6,7 +6,7 @@ import theano
 import theano.tensor as T
 from sklearn.cross_validation import StratifiedShuffleSplit
 
-_std_height = 20 # TODO: Is this correct?
+_std_height = 20
 _std_width = 15
 
 

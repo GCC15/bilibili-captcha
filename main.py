@@ -14,6 +14,7 @@ def main():
     # dataset_manager.tune_partition_parameter()
     captcha_source.fill_captcha()
 
+
 def test_captcha_recognition():
     c.clear_temp()
     seq = None

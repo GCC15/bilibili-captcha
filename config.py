@@ -1,6 +1,5 @@
 # Configurations (e.g. paths), and generic file system operations
-# Use me:
-# import config as c
+# Use me: import config as c
 
 import os
 import json

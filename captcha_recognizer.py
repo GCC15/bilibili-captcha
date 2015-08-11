@@ -77,7 +77,6 @@ class CaptchaRecognizer:
         self.s_tolerance = s_tol
         self.v_tolerance = v_tol
         self.character_num = captcha_source.captcha_length
-        # TODO: adjust the values below
         self.char_width_min = 6
         self.char_width_max = 30
         self.char_height_min = 15
@@ -152,7 +151,9 @@ class CaptchaRecognizer:
         char_images = self.partition(img, save_intermediate, verbose)
 
         # TODO: hand over to the neural network
-        # Should return the captch as a string
+        # Should return a tuple, the first one is a boolean variable
+        # indicating whether the recognition is successful. If so, the second
+        # return value is the captch as a string
         return
 
     # Convert to a grayscale image using HSV
@@ -192,7 +193,6 @@ class CaptchaRecognizer:
         # Type C: 0. Inside noise, or background.
         return new_img
 
-    # TODO: how to improve this process?
     def remove_noise_with_neighbors(self, img, neighbor_low=0, neighbor_high=7):
         height, width = img.shape
         pad_shape = height + 2, width + 2

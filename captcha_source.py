@@ -1,5 +1,4 @@
 # A source from which we fetch captcha images
-# TODO: interactive test
 
 import requests
 from io import BytesIO
@@ -12,22 +11,20 @@ captcha_length = 5
 chars = '    EFGH JKLMN PQR TUVWXY  123456 89'.replace(' ', '')
 charset = set(chars)
 session = None
-cookie = None
 
 
-def _get_captcha_url(use_https=False):
-    return ('https' if use_https else 'http') + '://www.bilibili.com/captcha'
+def _get_captcha_url():
+    return 'https://www.bilibili.com/captcha'
 
 
 def canonicalize(seq):
     return seq.upper()
 
 
-def fetch_image(use_https=False, retry_limit=3):
+def fetch_image(retry_limit=3):
     global session
-    global cookie
     session = requests.session()
-    url = _get_captcha_url(use_https)
+    url = _get_captcha_url()
     header = {
         'User-Agent': "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:34.0) Gecko/20100101 Firefox/34.0",
     }
@@ -38,19 +35,16 @@ def fetch_image(use_https=False, retry_limit=3):
             print('num_retries = {}'.format(num_retries))
         try:
             r = session.get(url, headers=header)
-            # print(r.request.headers)
-            # cookie = r.request.headers['cookie']
             break
         except Exception as e:
             print(e)
     return None if r is None else mpimg.imread(BytesIO(r.content))
 
 
-# TODO: Bugs, probably need header and cookie
-def fill_captcha(use_https=True):
-    image = fetch_image(use_https)
-    if session is None:# or cookie is None:
-        raise ValueError('No session or session id found')
+def fill_captcha():
+    image = fetch_image()
+    if session is None:
+        raise ValueError('No session found')
     plt.ion()
     plt.show()
     plt.clf()
@@ -63,21 +57,18 @@ def fill_captcha(use_https=True):
         if len(captcha) == captcha_length:
             break
     plt.ioff()
-    #captcha = captcha_recognizer.CaptchaRecognizer().recognize(image)
-    url = ('https' if use_https else 'http') + '://account.bilibili.com/register/mail'
+    # success, string = captcha_recognizer.CaptchaRecognizer().recognize(image)
+    # if success:
+    #   captcha = string
+    url = 'https://account.bilibili.com/register/mail'
     header = {
         'User-Agent': "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:34.0) Gecko/20100101 Firefox/34.0",
         'Host': "account.bilibili.com",
         'Referer': url,
-        # 'Cookie': cookie,
-        'Origin': ('https' if use_https else 'http') +  '://account.bilibili.com'
     }
     data = {'vd': captcha, 'action': "checkVd"}
-    # print(cookie)
     r = session.post(url, headers=header, data=data)
-    print(r.request.headers)
-    print(data)
-    print(r.json())
+    # print(r.json())
     if r.json()['status'] == 'false':
         return False
     elif r.json()['status'] == 'True':
