@@ -1,0 +1,129 @@
+from abc import ABCMeta, abstractmethod
+from io import BytesIO
+
+import requests
+import matplotlib.image as mpimg
+
+
+# A HttpCaptchaProvider provides a state machine interface.
+# It is assumed that "fetch" and "verify" can be done through HTTP/HTTPS urls.
+# You can
+# 1. Fetch a CAPTCHA image;
+# 2. Verify if an answer to the last fetched CAPTCHA is correct.
+class HttpCaptchaProvider:
+    __metaclass__ = ABCMeta
+
+    def __init__(self, fetch_method, fetch_url, fetch_headers,
+                 verify_method, verify_url, verify_headers):
+        self.__fetch_method = fetch_method
+        self.__fetch_url = fetch_url
+        self.__fetch_headers = fetch_headers
+        self.__verify_method = verify_method
+        self.__verify_url = verify_url
+        self.__verify_headers = verify_headers
+        self.__session = requests.session()
+
+    def fetch(self, retry_limit=3):
+        print('Fetching CAPTCHA image from {}'.format(self.__fetch_url))
+        r = None
+        for num_retries in range(retry_limit):
+            if num_retries > 0:
+                print('Retry: {}'.format(num_retries))
+            try:
+                r = self.__session.request(
+                    self.__fetch_method,
+                    self.__fetch_url,
+                    headers=self.__fetch_headers
+                )
+                break
+            except Exception as e:
+                print(e)
+        return None if r is None else mpimg.imread(BytesIO(r.content))
+
+    def verify(self, seq):
+        r = self.__session.request(
+            self.__verify_method,
+            self.__verify_url,
+            headers=self.__verify_headers,
+            data=self.__get_data_from_seq(seq)
+        )
+        return self.__is_correct_response(r)
+
+    @abstractmethod
+    def __get_data_from_seq(self, seq):
+        raise NotImplementedError()
+
+    @abstractmethod
+    def __is_correct_response(self, r):
+        raise NotImplementedError()
+
+
+# A NormalSeqSet represents the set of all sequences with a fixed length, and
+# with the chars chosen from a set.
+class NormalSeqSet:
+    def __init__(self, chars, seq_length):
+        self.chars = chars
+        self.charset = set(chars)
+        self.seq_length = seq_length
+
+    def canonicalize_seq(self, seq):
+        return seq
+
+    def is_valid_seq(self, seq):
+        return (len(seq) == self.seq_length and
+                all(char in self.charset for char in seq))
+
+
+class BilibiliCaptchaProvider(HttpCaptchaProvider, NormalSeqSet):
+    __GET = 'GET'
+    __POST = 'POST'
+    __USER_AGENT = 'User-Agent'
+    __HOST = 'Host'
+    __REFERER = 'Referer'
+
+    __user_agent = ('Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:34.0) '
+                    'Gecko/20100101 Firefox/34.0')
+    __host = 'account.bilibili.com'
+
+    __fetch_method = __GET
+    __fetch_url = 'https://www.bilibili.com/captcha'
+    __fetch_headers = {
+        __USER_AGENT: __user_agent,
+        __HOST: __host,
+        __REFERER: __fetch_url
+    }
+
+    __verify_method = __POST
+    __verify_url = 'https://account.bilibili.com/register/mail'
+    __verify_headers = {
+        __USER_AGENT: __user_agent,
+        __HOST: __host,
+        __REFERER: __verify_url
+    }
+
+    def __init__(self):
+        #       'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+        chars = '    EFGH JKLMN PQR TUVWXY  123456 89'.replace(' ', '')
+        NormalSeqSet.__init__(self, chars, 5)
+        HttpCaptchaProvider.__init__(
+            self,
+            self.__fetch_method, self.__fetch_url, self.__fetch_headers,
+            self.__verify_method, self.__verify_url, self.__verify_headers,
+        )
+
+    def verify(self, seq):
+        return self.is_valid_seq(seq) and HttpCaptchaProvider.verify(self, seq)
+
+    def __get_data_from_seq(self, seq):
+        return {'vd': seq, 'action': "checkVd"}
+
+    def __is_correct_response(self, r):
+        r_json = r.json()
+        if r_json['status'].lower() == 'true':
+            return True
+        else:
+            print(r_json)
+            return False
+
+    def canonicalize_seq(self, seq):
+        return seq.upper()

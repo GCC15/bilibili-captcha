@@ -1,4 +1,4 @@
-# generic helper functions
+# Generic helper functions
 
 import time
 import numpy as np
@@ -38,7 +38,7 @@ def sort_by_occurrence(arr):
 
 
 # # https://en.wikipedia.org/wiki/Von_Neumann_neighborhood
-# def _manhattan_neighbors(r=1):
+# def manhattan_neighbors(r=1):
 #     neighbors = []
 #     for dy in range(-r, r + 1):
 #         xx = r - abs(dy)
@@ -47,14 +47,13 @@ def sort_by_occurrence(arr):
 #                 continue
 #             neighbors.append((dy, dx))
 #     return neighbors
-# https://en.wikipedia.org/wiki/Lennard-Jones_potential
 
 # Color map for grayscale images
-_cm_greys = plt.cm.get_cmap('Greys')
+cm_greys = plt.cm.get_cmap('Greys')
 
 
 # Show image in matplotlib window
-def show_image(img, cmap=_cm_greys, title=None, interp=None):
+def show_image(img, cmap=cm_greys, title=None, interp=None):
     plt.clf()
     plt.axis('off')
     plt.imshow(img, cmap=cmap, interpolation=interp)
@@ -63,6 +62,7 @@ def show_image(img, cmap=_cm_greys, title=None, interp=None):
     plt.show()
 
 
+# https://en.wikipedia.org/wiki/Lennard-Jones_potential
 def _lj(r, delta=4):
     return np.power(delta / r, 12) - 2 * np.power(delta / r, 6)
 
@@ -125,11 +125,6 @@ def anneal(img, num_steps=1000):
     # plt.ylabel('Energy')
     # plt.show()
     return new_img
-
-
-# Capitalize all characters in a sequence
-def canonicalize(seq):
-    return seq.upper()
 
 
 # resize a image to new height and width

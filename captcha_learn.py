@@ -1,5 +1,5 @@
 import dataset_manager
-from captcha_source import CaptchaSource
+from captcha_provider import BilibiliCaptchaProvider
 import timeit
 import numpy
 import theano
@@ -9,7 +9,7 @@ import helper
 
 _std_height = 20
 _std_width = 15
-_source = CaptchaSource()
+_captcha_provider = BilibiliCaptchaProvider()
 
 # Reference:
 # http://deeplearning.net/tutorial/logreg.html
@@ -387,6 +387,7 @@ def test_mlp(datasets, learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001,
     y = T.ivector('y')  # the labels are presented as 1D vector of
     # [int] labels
 
+    # TODO: use time as seed
     rng = numpy.random.RandomState(1234)
 
     # construct the MLP class
@@ -395,7 +396,7 @@ def test_mlp(datasets, learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001,
         input=x,
         n_in=_std_height * _std_width,
         n_hidden=n_hidden,
-        n_out=len(_source.chars)
+        n_out=len(_captcha_provider.chars)
     )
 
     # the cost we minimize during training is the negative log likelihood of
@@ -538,8 +539,8 @@ def test_mlp(datasets, learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001,
 def load_data():
     input_list = []
     target_list = []
-    for cat in range(len(_source.chars)):
-        char = _source.chars[cat]
+    for cat in range(len(_captcha_provider.chars)):
+        char = _captcha_provider.chars[cat]
         char_images = dataset_manager.get_training_char_images(char)
         for image in char_images:
             target_list.append(cat)

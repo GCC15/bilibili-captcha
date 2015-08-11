@@ -1,27 +1,28 @@
 # Handle image processing before giving over to captcha learner
 
-import config as c
 import matplotlib.colors as colors
 import matplotlib.image as mpimg
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy import ndimage
+
+import config as c
 import helper
-from captcha_source import CaptchaSource
+from captcha_provider import BilibiliCaptchaProvider
 
 # Color map for grayscale images
 _cm_greys = plt.cm.get_cmap('Greys')
 
 
 class CaptchaRecognizer:
-    def __init__(self, source=CaptchaSource(), h_tol=6 / 360, s_tol=36 / 100,
+    def __init__(self, captcha_provider=BilibiliCaptchaProvider(), h_tol=6 / 360, s_tol=36 / 100,
                  v_tol=40 / 100):
         # Three parameters to be used in remove_noise_with_hsv
         self.h_tolerance = h_tol
         self.s_tolerance = s_tol
         self.v_tolerance = v_tol
 
-        self.character_num = source.captcha_length
+        self.character_num = captcha_provider.seq_length
 
         # Four parameters to be used in partition
         self.char_width_min = 5
