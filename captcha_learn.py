@@ -349,10 +349,6 @@ def test_mlp(datasets, learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001,
     test_set_y = test_set_y[0]
     temp_train_set_x = temp_train_set_x[0]
     temp_train_set_y = temp_train_set_y[0]
-    print("test_set_x shape: " + str(test_set_x.shape))
-    print("test_set_y shape: " + str(test_set_y.shape))
-    print("temp_train_set_x shape: " + str(temp_train_set_x.shape))
-    print("temp_train_set_y shape: " + str(temp_train_set_y.shape))
 
     # stratified k-fold to split valid and train
     skf = StratifiedShuffleSplit(temp_train_set_y, 1, 0.25, random_state=0)
@@ -363,15 +359,27 @@ def test_mlp(datasets, learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001,
         valid_set_x.append(temp_train_set_x[valid_index])
         valid_set_y.append(temp_train_set_y[valid_index])
 
-    # convert to array
+    # convert from list-wrapping array to array
     train_set_x = train_set_x[0]
     train_set_y = train_set_y[0]
     valid_set_x = valid_set_x[0]
     valid_set_y = valid_set_y[0]
+
+    # check shape
     print("train_set_x shape: " + str(train_set_x.shape))
     print("train_set_y shape: " + str(train_set_y.shape))
     print("valid_set_x shape: " + str(valid_set_x.shape))
     print("valid_set_y shape: " + str(valid_set_y.shape))
+    print("test_set_x shape: " + str(test_set_x.shape))
+    print("test_set_y shape: " + str(test_set_y.shape))
+
+    # convert to theano.shared variable
+    train_set_x = theano.shared(value=train_set_x, name='train_set_x')
+    train_set_y = theano.shared(value=train_set_y, name='train_set_y')
+    valid_set_x = theano.shared(value=valid_set_x, name='valid_set_x')
+    valid_set_y = theano.shared(value=valid_set_y, name='valid_set_y')
+    test_set_x = theano.shared(value=test_set_x, name='test_set_x')
+    test_set_y = theano.shared(value=test_set_y, name='test_set_y')
 
     # compute number of minibatches for training, validation and testing
     n_train_batches = train_set_x.shape[0] / batch_size
@@ -381,11 +389,9 @@ def test_mlp(datasets, learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001,
     print('... building the model')
 
     # allocate symbolic variables for the data
-    # TODO: What do these three lines mean?
     index = T.lscalar()  # index to a [mini]batch
     x = T.matrix('x')  # the data is presented as rasterized images
-    y = T.ivector('y')  # the labels are presented as 1D vector of
-    # [int] labels
+    y = T.lvector('y')  # the labels are presented as 1D vector of [int] labels
 
     # TODO: use time as seed
     rng = numpy.random.RandomState(1234)
@@ -465,7 +471,10 @@ def test_mlp(datasets, learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001,
     # found
     improvement_threshold = 0.995  # a relative improvement of this much is
     # considered significant
-    validation_frequency = min(n_train_batches, patience / 2)
+    if T.lt(n_train_batches, patience / 2):
+        validation_frequency = n_train_batches
+    else:
+        validation_frequency = patience / 2
     # go through this many
     # minibatches before checking the network
     # on the validation set; in this case we
@@ -481,7 +490,7 @@ def test_mlp(datasets, learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001,
 
     while (epoch < n_epochs) and (not done_looping):
         epoch += 1
-        for minibatch_index in range(n_train_batches):
+        for minibatch_index in range(n_train_batches): # TODO: convert tensor variable to integer
 
             minibatch_avg_cost = train_model(minibatch_index)
             # iteration number
@@ -547,8 +556,8 @@ def load_data():
             input_list.append(helper.resize(
                 image, _std_height, _std_width
             ).flatten())
-    inputs = numpy.array(input_list)
-    targets = numpy.array(target_list)
+    inputs = numpy.array(input_list, dtype=theano.config.floatX) # data type needs to be specified
+    targets = numpy.array(target_list, dtype=int) # data type needs to be specified
     return inputs, targets
     # Loading the dataset
     # Output format: [train_set, valid_set, test_set]
@@ -568,13 +577,13 @@ def main():
     import captcha_recognizer
     helper.show_image(
         numpy.reshape(
-            inputs[numpy.random.rand(1, 1) * inputs.shape[0]],
+            inputs[numpy.random.rand() * inputs.shape[0]],
             (_std_height, _std_width)
         ),
         interp='nearest'
     )
     print(numpy.unique(targets))
-    # test_mlp(dataset)
+    test_mlp(dataset)
 
 
 if __name__ == '__main__':
