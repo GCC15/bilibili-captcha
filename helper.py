@@ -71,7 +71,6 @@ def _lj(r, delta=4):
 def anneal(img, num_steps=1000):
     np.seterr(divide='ignore', invalid='ignore')
     height, width = img.shape
-    # TODO: Use RGB for now, just for visualization
     new_img = np.zeros((height, width, 3))
     for i in range(3):
         new_img[:, :, i] = 1 - img.copy()
@@ -87,7 +86,6 @@ def anneal(img, num_steps=1000):
     particles = np.ones(num_positions, dtype=bool)
     # plt.ion()
     # show_image(new_img)
-    # TODO: Just for testing
     E = 0
     # step_list= []
     # E_list = []
