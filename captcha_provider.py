@@ -74,6 +74,7 @@ class NormalSeqSet:
                 all(char in self.charset for char in seq))
 
 
+# BilibiliCaptchaProvider provides captcha from www.bilibili.com
 class BilibiliCaptchaProvider(HttpCaptchaProvider, NormalSeqSet):
     __GET = 'GET'
     __POST = 'POST'

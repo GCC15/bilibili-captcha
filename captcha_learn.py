@@ -1,15 +1,19 @@
-import dataset_manager
-from captcha_provider import BilibiliCaptchaProvider
 import timeit
+import random
 import numpy
 import theano
 import theano.tensor as T
 from sklearn.cross_validation import StratifiedShuffleSplit
+import time
+
 import helper
+import dataset_manager
+from captcha_provider import BilibiliCaptchaProvider
 
 _std_height = 20
 _std_width = 15
 _captcha_provider = BilibiliCaptchaProvider()
+
 
 # Reference:
 # http://deeplearning.net/tutorial/logreg.html
@@ -382,9 +386,14 @@ def test_mlp(datasets, learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001,
     test_set_y = theano.shared(value=test_set_y, name='test_set_y')
 
     # compute number of minibatches for training, validation and testing
-    n_train_batches = train_set_x.shape[0] / batch_size
-    n_valid_batches = valid_set_x.shape[0] / batch_size
-    n_test_batches = test_set_x.shape[0] / batch_size
+    n_train_batches = int(train_set_x.get_value().shape[0] / batch_size)
+    n_valid_batches = int(valid_set_x.get_value().shape[0] / batch_size)
+    n_test_batches = int(test_set_x.get_value().shape[0] / batch_size)
+
+    # check batch
+    print("n_train_batches:" + str(n_train_batches))
+    print("n_valid_batches:" + str(n_valid_batches))
+    print("n_test_batches:" + str(n_test_batches))
 
     print('... building the model')
 
@@ -393,8 +402,7 @@ def test_mlp(datasets, learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001,
     x = T.matrix('x')  # the data is presented as rasterized images
     y = T.lvector('y')  # the labels are presented as 1D vector of [int] labels
 
-    # TODO: use time as seed
-    rng = numpy.random.RandomState(1234)
+    rng = numpy.random.RandomState(int((time.time())))
 
     # construct the MLP class
     classifier = MLP(
@@ -490,7 +498,8 @@ def test_mlp(datasets, learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001,
 
     while (epoch < n_epochs) and (not done_looping):
         epoch += 1
-        for minibatch_index in range(n_train_batches): # TODO: convert tensor variable to integer
+        for minibatch_index in range(
+                n_train_batches):
 
             minibatch_avg_cost = train_model(minibatch_index)
             # iteration number
@@ -539,10 +548,11 @@ def test_mlp(datasets, learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001,
                 break
 
     end_time = timeit.default_timer()
-    print(('Optimization complete. Best validation score of %f %% '
-           'obtained at iteration %i, with test performance %f %%') %
-          (best_validation_loss * 100., best_iter + 1, test_score * 100.))
-    print('Time used for testing the mlp is', start_time - end_time)
+    print(
+        'Optimization complete. Best validation score of {0} obtained at '
+        'iteration {1}, with test performance {2}'.format
+        (best_validation_loss * 100, best_iter + 1, test_score * 100))
+    print('Time used for testing the mlp is', end_time - start_time)
 
 
 def load_data():
@@ -556,8 +566,11 @@ def load_data():
             input_list.append(helper.resize_image(
                 image, _std_height, _std_width
             ).flatten())
-    inputs = numpy.array(input_list, dtype=theano.config.floatX) # data type needs to be specified
-    targets = numpy.array(target_list, dtype=int) # data type needs to be specified
+    inputs = numpy.array(input_list,
+                         dtype=theano.config.floatX)  # data type needs to be
+    #  specified
+    targets = numpy.array(target_list,
+                          dtype=int)  # data type needs to be specified
     return inputs, targets
     # Loading the dataset
     # Output format: [train_set, valid_set, test_set]
@@ -575,14 +588,15 @@ def main():
     print("Input Shape: " + str(inputs.shape))
     print("Target Shape: " + str(targets.shape))
     import captcha_recognizer
+    '''
     helper.show_image(
         numpy.reshape(
-            inputs[numpy.random.rand() * inputs.shape[0]],
+            inputs[random.randint(0,inputs.shape[0] - 1)],
             (_std_height, _std_width)
         ),
         interp='nearest'
     )
-    print(numpy.unique(targets))
+    '''
     test_mlp(dataset)
 
 

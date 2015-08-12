@@ -53,7 +53,6 @@ def sort_by_occurrence(arr):
 #     return neighbors
 
 
-
 # Show image in matplotlib window
 def show_image(img, cmap=cm_greys, title=None, interp=None):
     plt.clf()
