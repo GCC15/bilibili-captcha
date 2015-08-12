@@ -15,6 +15,13 @@ _std_width = 15
 _captcha_provider = BilibiliCaptchaProvider()
 
 
+# TODO: Clean up and update unnecessary codes and comments
+# TODO: write a function that returns the predicted label for a single test
+# image
+# TODO: show error rate for each character
+# TODO: save the model parameter in a json file called model.json or whatever
+#  so that it can be used to predict without optimization
+
 # Reference:
 # http://deeplearning.net/tutorial/logreg.html
 # http://deeplearning.net/tutorial/mlp.html
@@ -569,7 +576,6 @@ def load_data():
     inputs = numpy.array(input_list, dtype=theano.config.floatX)
     targets = numpy.array(target_list, dtype=numpy.int64)
     return inputs, targets
-    # TODO: update comment
     # Loading the dataset
     # Output format: [train_set, valid_set, test_set]
     # train_set, valid_set, test_set format: tuple(input, target)
