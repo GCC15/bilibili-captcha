@@ -2,20 +2,18 @@
 
 import matplotlib.colors as colors
 import matplotlib.image as mpimg
-import matplotlib.pyplot as plt
 import numpy as np
 from scipy import ndimage
 
 import config as c
-import helper
+from helper import time_func, cm_greys, repeat, sort_by_occurrence
 from captcha_provider import BilibiliCaptchaProvider
-
-# Color map for grayscale images
-_cm_greys = plt.cm.get_cmap('Greys')
 
 
 class CaptchaRecognizer:
-    def __init__(self, captcha_provider=BilibiliCaptchaProvider(), h_tol=6 / 360, s_tol=36 / 100,
+    def __init__(self, captcha_provider=BilibiliCaptchaProvider(),
+                 h_tol=6 / 360,
+                 s_tol=36 / 100,
                  v_tol=40 / 100):
         # Three parameters to be used in remove_noise_with_hsv
         self.h_tolerance = h_tol
@@ -37,23 +35,23 @@ class CaptchaRecognizer:
             mpimg.imsave(c.temp_path('00.origin.png'), img)
 
         # 1
-        img_01 = helper.time_func(
+        img_01 = time_func(
             'remove_noise_with_hsv' if verbose else None,
             lambda: self.remove_noise_with_hsv(img)
         )
         if save_intermediate:
-            mpimg.imsave(c.temp_path('01.hsv.png'), img_01, cmap=_cm_greys)
+            mpimg.imsave(c.temp_path('01.hsv.png'), img_01, cmap=cm_greys)
 
         # 2
-        img_02 = helper.time_func(
+        img_02 = time_func(
             'remove_noise_with_neighbors' if verbose else None,
-            lambda: helper.repeat(self.remove_noise_with_neighbors, 2)(img_01)
+            lambda: repeat(self.remove_noise_with_neighbors, 2)(img_01)
         )
         if save_intermediate:
-            mpimg.imsave(c.temp_path('02.neighbor.png'), img_02, cmap=_cm_greys)
+            mpimg.imsave(c.temp_path('02.neighbor.png'), img_02, cmap=cm_greys)
 
         # 3
-        labels, object_slices = helper.time_func(
+        labels, object_slices = time_func(
             'segment_with_label' if verbose else None,
             lambda: self.segment_with_label(img_02)
         )
@@ -89,7 +87,7 @@ class CaptchaRecognizer:
                     for i in range(len(char_images)):
                         mpimg.imsave(
                             c.temp_path('03.char.{}.png'.format(i + 1)),
-                            char_images[i], cmap=_cm_greys)
+                            char_images[i], cmap=cm_greys)
                 return char_images
         if verbose:
             print('Warning: partition failed!')
@@ -111,7 +109,7 @@ class CaptchaRecognizer:
         # Convert to int so we can sort the colors
         # noinspection PyTypeChecker
         img_int = np.dot(np.rint(img * 255), np.power(256, np.arange(3)))
-        color_array = helper.sort_by_occurrence(img_int.flatten())
+        color_array = sort_by_occurrence(img_int.flatten())
         # 2nd most frequent
         std_color = color_array[1]
         std_b, mod = divmod(std_color, 256 ** 2)

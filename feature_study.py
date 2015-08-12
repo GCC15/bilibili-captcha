@@ -1,13 +1,12 @@
 # Trying to improve char partitioning
 
+import matplotlib.image as mpimg
+import skimage.morphology as morph
+
 import config as c
 import dataset_manager
 import captcha_recognizer
 from helper import time_func, repeat, cm_greys
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.image as mpimg
-import skimage.morphology as morph
 
 
 # import skimage.segmentation as seg

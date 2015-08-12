@@ -12,7 +12,6 @@ import numpy as np
 from captcha_provider import BilibiliCaptchaProvider
 import config as c
 from captcha_recognizer import CaptchaRecognizer
-import helper
 
 _cm_greys = plt.cm.get_cmap('Greys')
 _png = '.png'

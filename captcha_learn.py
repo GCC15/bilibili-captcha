@@ -553,7 +553,7 @@ def load_data():
         char_images = dataset_manager.get_training_char_images(char)
         for image in char_images:
             target_list.append(cat)
-            input_list.append(helper.resize(
+            input_list.append(helper.resize_image(
                 image, _std_height, _std_width
             ).flatten())
     inputs = numpy.array(input_list, dtype=theano.config.floatX) # data type needs to be specified

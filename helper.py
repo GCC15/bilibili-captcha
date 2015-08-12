@@ -1,12 +1,16 @@
 # Generic helper functions
 
 import time
+import random
+
 import numpy as np
 import numpy.linalg as la
 import matplotlib.pyplot as plt
-import random
 import scipy as sp
 import scipy.misc
+
+# Color map for grayscale images
+cm_greys = plt.cm.get_cmap('Greys')
 
 
 # A generic function timer
@@ -48,8 +52,6 @@ def sort_by_occurrence(arr):
 #             neighbors.append((dy, dx))
 #     return neighbors
 
-# Color map for grayscale images
-cm_greys = plt.cm.get_cmap('Greys')
 
 
 # Show image in matplotlib window
@@ -125,8 +127,8 @@ def anneal(img, num_steps=1000):
     return new_img
 
 
-# resize a image to new height and width
-def resize(image, height, width):
+# resize an image to a new size
+def resize_image(image, height, width):
     return sp.misc.imresize(
         image,
         (height, width)
