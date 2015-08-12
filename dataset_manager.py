@@ -205,7 +205,7 @@ def partition_training_images_to_chars(captcha_recognizer=CaptchaRecognizer(),
         json_dict[_FAIL] = []
         json_dict[_SUCCESS] = []
         for char in _captcha_provider.chars:
-            json_dict[_NUM_CHAR.format(char)] = 0
+            json_dict[_NUM_CHAR.format(char)] = [0, 0]
     seqs = _list_basename(_training_set_dir)
     num_total = len(seqs)
     old_seq_set = set(json_dict[_FAIL] + json_dict[_SUCCESS])
@@ -228,15 +228,19 @@ def partition_training_images_to_chars(captcha_recognizer=CaptchaRecognizer(),
         if char_images is not None:
             json_dict[_SUCCESS].append(seq)
             num_update_success += 1
-            for i in range(len(char_images)):
+            for i in range(_captcha_provider.seq_length):
                 char = seq[i]
-                json_dict[_NUM_CHAR.format(char)] += 1
+                json_dict[_NUM_CHAR.format(char)][1] += 1
+                json_dict[_NUM_CHAR.format(char)][0] += 1
                 if save:
                     path = _get_training_char_path(char, _add_suffix(
                         '{}.{}'.format(seq, i + 1)))
                     mpimg.imsave(path, char_images[i], cmap=_cm_greys)
         else:
             json_dict[_FAIL].append(seq)
+            for i in range(_captcha_provider.seq_length):
+                char = seq[i]
+                json_dict[_NUM_CHAR.format(char)][1] += 1
 
     num_total_success = len(json_dict[_SUCCESS])
     json_dict[_NUM_TOTAL] = num_total
