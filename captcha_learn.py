@@ -324,8 +324,8 @@ def test_mlp(datasets, learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001,
     :type n_epochs: int
     :param n_epochs: maximal number of epochs to run the optimizer
 
-    :type datasets: list
-    :param datasets: a list of matrix,
+    :type datasets: tuple
+    :param datasets: (inputs, targets)
 
    """
     inputs, targets = datasets
@@ -566,12 +566,10 @@ def load_data():
             input_list.append(helper.resize_image(
                 image, _std_height, _std_width
             ).flatten())
-    inputs = numpy.array(input_list,
-                         dtype=theano.config.floatX)  # data type needs to be
-    #  specified
-    targets = numpy.array(target_list,
-                          dtype=int)  # data type needs to be specified
+    inputs = numpy.array(input_list, dtype=theano.config.floatX)
+    targets = numpy.array(target_list, dtype=numpy.int64)
     return inputs, targets
+    # TODO: update comment
     # Loading the dataset
     # Output format: [train_set, valid_set, test_set]
     # train_set, valid_set, test_set format: tuple(input, target)
@@ -587,11 +585,10 @@ def main():
     inputs, targets = dataset
     print("Input Shape: " + str(inputs.shape))
     print("Target Shape: " + str(targets.shape))
-    import captcha_recognizer
     '''
     helper.show_image(
         numpy.reshape(
-            inputs[random.randint(0,inputs.shape[0] - 1)],
+            inputs[random.randint(0, inputs.shape[0] - 1)],
             (_std_height, _std_width)
         ),
         interp='nearest'
