@@ -1,6 +1,7 @@
 from abc import ABCMeta, abstractmethod
 from io import BytesIO
-
+import random
+from helper import show_image
 import requests
 import matplotlib.image as mpimg
 
@@ -45,16 +46,16 @@ class HttpCaptchaProvider:
             self.__verify_method,
             self.__verify_url,
             headers=self.__verify_headers,
-            data=self.__get_data_from_seq(seq)
+            data=self._get_data_from_seq(seq)
         )
-        return self.__is_correct_response(r)
+        return self._is_correct_response(r)
 
     @abstractmethod
-    def __get_data_from_seq(self, seq):
+    def _get_data_from_seq(self, seq):
         raise NotImplementedError()
 
     @abstractmethod
-    def __is_correct_response(self, r):
+    def _is_correct_response(self, r):
         raise NotImplementedError()
 
 
@@ -115,12 +116,12 @@ class BilibiliCaptchaProvider(HttpCaptchaProvider, NormalSeqSet):
     def verify(self, seq):
         return self.is_valid_seq(seq) and HttpCaptchaProvider.verify(self, seq)
 
-    def __get_data_from_seq(self, seq):
+    def _get_data_from_seq(self, seq):
         return {'vd': seq, 'action': "checkVd"}
 
-    def __is_correct_response(self, r):
+    def _is_correct_response(self, r):
         r_json = r.json()
-        if r_json['status'].lower() == 'true':
+        if r_json['status']:
             return True
         else:
             print(r_json)
@@ -128,3 +129,27 @@ class BilibiliCaptchaProvider(HttpCaptchaProvider, NormalSeqSet):
 
     def canonicalize_seq(self, seq):
         return seq.upper()
+
+
+def _test_bilibili():
+    captcha_provider = BilibiliCaptchaProvider()
+    print(captcha_provider.is_valid_seq(
+        ''.join(random.sample(captcha_provider.chars, 5))
+    ))
+    print(captcha_provider.is_valid_seq(
+        ''.join(random.sample(captcha_provider.chars, 4)) + ' '
+    ))
+    show_image(captcha_provider.fetch())
+    seq = captcha_provider.canonicalize_seq(
+        input('Input the answer sequence to verify: ')
+    )
+    print(captcha_provider.verify(seq))
+
+
+def main():
+    _test_bilibili()
+
+
+if __name__ == '__main__':
+    main()
+
