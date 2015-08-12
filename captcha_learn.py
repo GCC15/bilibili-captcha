@@ -16,11 +16,10 @@ _captcha_provider = BilibiliCaptchaProvider()
 
 
 # TODO: Clean up and update unnecessary codes and comments
-# TODO: write a function that returns the predicted label for a single test
-# image
+# TODO: write a function that returns the predicted label for a single test image
 # TODO: show error rate for each character
 # TODO: save the model parameter in a json file called model.json or whatever
-#  so that it can be used to predict without optimization
+# so that it can be used to predict without optimization
 
 # Reference:
 # http://deeplearning.net/tutorial/logreg.html
@@ -99,13 +98,6 @@ class LogisticRegression(object):
         """Return the mean of the negative log-likelihood of the prediction
         of this model under a given target distribution.
 
-        .. math::
-
-            \frac{1}{|\mathcal{D}|} \mathcal{L} (\theta=\{W,b\}, \mathcal{D}) =
-            \frac{1}{|\mathcal{D}|} \sum_{i=0}^{|\mathcal{D}|}
-                \log(P(Y=y^{(i)}|x^{(i)}, W,b)) \\
-            \ell (\theta=\{W,b\}, \mathcal{D})
-
         :type y: theano.tensor.TensorType
         :param y: corresponds to a vector that gives for each example the
                   correct label
@@ -148,6 +140,16 @@ class LogisticRegression(object):
             return T.mean(T.neq(self.y_pred, y))
         else:
             raise NotImplementedError()
+
+    def getComparison(self, y):
+        # TODO: print out prediction and target
+        print("Predict: ")
+        print(self.y_pred) # needs to be modified to see our actual prediction
+        # instead of "argmax"
+        print("Actual: ")
+        print(y.eval()) # seems to be correct but produce weird result
+        # (y should be a vector, and shouldn't be 20 ALL THE TIME)
+
 
 
 class HiddenLayer(object):
@@ -346,7 +348,7 @@ def test_mlp(datasets, learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001,
     test_set_y = []
 
     # stratified k-fold to split test and temporary train, which contains
-    # valid and train
+    # validation and train
     skf = StratifiedShuffleSplit(targets, 1, 0.2, random_state=0)
     for temp_train_index, test_index in skf:
         # print("TEMP_TRAIN:", temp_train_index, "TEST:", test_index)
@@ -364,7 +366,7 @@ def test_mlp(datasets, learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001,
     # stratified k-fold to split valid and train
     skf = StratifiedShuffleSplit(temp_train_set_y, 1, 0.25, random_state=0)
     for train_index, valid_index in skf:
-        # print("TRAIN:", train_index, "VALID:", valid_index)
+        # print("TRAIN: ", train_index, ", VALID: ", valid_index)
         train_set_x.append(temp_train_set_x[train_index])
         train_set_y.append(temp_train_set_y[train_index])
         valid_set_x.append(temp_train_set_x[valid_index])
@@ -409,7 +411,8 @@ def test_mlp(datasets, learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001,
     x = T.matrix('x')  # the data is presented as rasterized images
     y = T.lvector('y')  # the labels are presented as 1D vector of [int] labels
 
-    rng = numpy.random.RandomState(int((time.time())))
+    rng = numpy.random.RandomState(1234)
+    #rng = numpy.random.RandomState(int((time.time())))
 
     # construct the MLP class
     classifier = MLP(
@@ -525,9 +528,10 @@ def test_mlp(datasets, learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001,
                         minibatch_index + 1,
                         n_train_batches,
                         this_validation_loss * 100.
+
                     )
                 )
-
+                classifier.logRegressionLayer.getComparison(valid_set_y[minibatch_index])
                 # if we got the best validation score until now
                 if this_validation_loss < best_validation_loss:
                     # improve patience if loss improvement is good enough
@@ -560,6 +564,8 @@ def test_mlp(datasets, learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001,
         'iteration {1}, with test performance {2}'.format
         (best_validation_loss * 100, best_iter + 1, test_score * 100))
     print('Time used for testing the mlp is', end_time - start_time)
+
+
 
 
 def load_data():
