@@ -23,8 +23,10 @@ class HttpCaptchaProvider:
         self.__verify_url = verify_url
         self.__verify_headers = verify_headers
         self.__session = requests.session()
+        self.__is_virgin = True
 
     def fetch(self, retry_limit=3):
+        self.__is_virgin = False
         print('Fetching CAPTCHA image from {}'.format(self.__fetch_url))
         r = None
         for num_retries in range(retry_limit):
@@ -42,6 +44,8 @@ class HttpCaptchaProvider:
         return None if r is None else mpimg.imread(BytesIO(r.content))
 
     def verify(self, seq):
+        if self.__is_virgin:
+            raise ValueError('Must fetch a CAPTCHA first!')
         r = self.__session.request(
             self.__verify_method,
             self.__verify_url,
