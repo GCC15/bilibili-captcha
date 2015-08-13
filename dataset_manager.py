@@ -153,12 +153,12 @@ def _get_suffix(filename):
     return ext
 
 
-# def get_test_image(seq):
-#     return _get_image(test_set_dir, _add_suffix(seq))
+def get_test_image(seq):
+    return _get_image(_test_set_dir, _add_suffix(seq))
 
 
-# def get_test_images(num=1):
-#     return _get_images(test_set_dir, num)
+def get_test_images(num=1):
+     return _get_images(_test_set_dir, num)
 
 
 # Return a training image randomly if seq is None

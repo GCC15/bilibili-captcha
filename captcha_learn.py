@@ -595,7 +595,7 @@ def load_data():
 
 
 def predict(img):
-    # data should be a numpy array of that is has not been resized
+    # data should be a numpy array of that has not been resized
 
     # helper.show_image(img)
     data = helper.resize_image(img,_std_height, _std_width).flatten()
@@ -614,7 +614,7 @@ def predict(img):
     return _captcha_provider.chars[predicted_values]
 
 
-def reoptimize_model():
+def reconstruct_model():
     dataset = load_data()
     test_mlp(dataset)
 

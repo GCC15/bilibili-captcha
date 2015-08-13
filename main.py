@@ -8,9 +8,9 @@ from captcha_learn import MLP, LogisticRegression, HiddenLayer
 
 
 def main():
-    # dataset_manager.fetch_training_set(100)
-    test_captcha_recognition()
-    # dataset_manager.partition_training_images_to_chars()
+    dataset_manager.fetch_training_set(20)
+    # test_captcha_recognition()
+    dataset_manager.partition_training_images_to_chars()
     # dataset_manager.partition_training_images_to_chars(force_update=True,
     # save=True)
     # dataset_manager.tune_partition_parameter()
@@ -49,7 +49,11 @@ def test_captcha_recognition():
     # seq = '2XML9'
     # seq = 'W9WU4'
 
-    image = dataset_manager.get_training_image(seq)
+    # image = dataset_manager.get_training_image(seq)
+    # image = dataset_manager.get_test_image(seq)
+    a = BilibiliCaptchaProvider()
+    image = a.fetch()
+
     success, captcha = CaptchaRecognizer().recognize(image,
                                                      save_intermediate=True,
                                                      verbose=True,
