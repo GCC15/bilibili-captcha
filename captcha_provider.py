@@ -87,17 +87,17 @@ class BilibiliCaptchaProvider(HttpCaptchaProvider, NormalSeqSet):
                     'Gecko/20100101 Firefox/34.0')
     __host = 'account.bilibili.com'
 
-    __fetch_method = __GET
-    __fetch_url = 'https://www.bilibili.com/captcha'
-    __fetch_headers = {
-        __USER_AGENT: __user_agent,
-        __HOST: __host,
-        __REFERER: __fetch_url
-    }
-
     __verify_method = __POST
     __verify_url = 'https://account.bilibili.com/register/mail'
     __verify_headers = {
+        __USER_AGENT: __user_agent,
+        __HOST: __host,
+        __REFERER: __verify_url
+    }
+
+    __fetch_method = __GET
+    __fetch_url = 'https://www.bilibili.com/captcha'
+    __fetch_headers = {
         __USER_AGENT: __user_agent,
         __HOST: __host,
         __REFERER: __verify_url
