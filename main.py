@@ -1,14 +1,21 @@
 import config as c
 import dataset_manager
 from captcha_recognizer import CaptchaRecognizer
+from captcha_provider import BilibiliCaptchaProvider
+
+# Below three imports is necessary for loading the pickle file, DO NOT DELETE
+from captcha_learn import MLP, LogisticRegression, HiddenLayer
 
 
 def main():
     # dataset_manager.fetch_training_set(100)
-    # test_captcha_recognition()
-    dataset_manager.partition_training_images_to_chars()
-    # dataset_manager.partition_training_images_to_chars(force_update=True, save=True)
+    test_captcha_recognition()
+    # dataset_manager.partition_training_images_to_chars()
+    # dataset_manager.partition_training_images_to_chars(force_update=True,
+    # save=True)
     # dataset_manager.tune_partition_parameter()
+    # print(os.getcwd())
+    # open(os.path.join(c.get('dataset'), 'best_model.pkl'), 'rb')
 
 
 def test_captcha_recognition():
@@ -43,7 +50,14 @@ def test_captcha_recognition():
     # seq = 'W9WU4'
 
     image = dataset_manager.get_training_image(seq)
-    CaptchaRecognizer().recognize(image, save_intermediate=True, verbose=True)
+    success, captcha = CaptchaRecognizer().recognize(image,
+                                                     save_intermediate=True,
+                                                     verbose=True,
+                                                     reoptimize=False)
+    if success:
+        print(captcha)
+        print('Recognized captcha is ', BilibiliCaptchaProvider().verify(captcha))
+
 
 
 if __name__ == '__main__':

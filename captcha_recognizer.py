@@ -8,7 +8,7 @@ from scipy import ndimage
 import config as c
 from helper import time_func, cm_greys, repeat, sort_by_occurrence
 from captcha_provider import BilibiliCaptchaProvider
-
+import captcha_learn
 
 class CaptchaRecognizer:
     def __init__(self, captcha_provider=BilibiliCaptchaProvider(),
@@ -94,14 +94,21 @@ class CaptchaRecognizer:
         return None
 
     # Recognize the captcha
-    def recognize(self, img, save_intermediate=False, verbose=False):
+    def recognize(self, img, save_intermediate=False, verbose=False, reoptimize=False):
+        captcha = []
+        success = None
         char_images = self.partition(img, save_intermediate, verbose)
+        if reoptimize:
+            captcha_learn.reoptimize_model()
 
-        # TODO: hand over to the neural network
-        # Should return a tuple, the first one is a boolean variable
-        # indicating whether the recognition is successful. If so, the second
-        # return value is the captch as a string
-        return
+        if char_images is not None and len(char_images) == 5:
+            success = True
+            for i in range(len(char_images)):
+                captcha.append(captcha_learn.predict(char_images[i]))
+            captcha = ''.join(captcha)
+        else:
+            success = False
+        return success,captcha
 
     # Convert to a grayscale image using HSV
     def remove_noise_with_hsv(self, img):

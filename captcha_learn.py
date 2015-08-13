@@ -594,9 +594,11 @@ def load_data():
     # target to the example with the same index in the input.
 
 
-def predict(data):
-    # data should be a numpy array of that is of length _std_height and
-    # _std_width
+def predict(img):
+    # data should be a numpy array of that is has not been resized
+
+    # helper.show_image(img)
+    data = helper.resize_image(img,_std_height, _std_width).flatten()
 
     # load the saved model
     classifier = pickle.load(
@@ -608,22 +610,11 @@ def predict(data):
         outputs=classifier.logRegressionLayer.y_pred,
     )
     predicted_values = predict_model([data])
-    return predicted_values
+    print('Image is ' + _captcha_provider.chars[predicted_values])
+    return _captcha_provider.chars[predicted_values]
 
 
-def main():
+def reoptimize_model():
     dataset = load_data()
-    inputs, targets = dataset
-    print("Input Shape: " + str(inputs.shape))
-    print("Target Shape: " + str(targets.shape))
-    test = inputs[random.randint(0, inputs.shape[0] - 1)]
-    helper.show_image(numpy.reshape(test, (_std_height, _std_width)),
-                      interp='nearest'
-                      )
-    # test_mlp(dataset)
-    print(predict(test))
-    print('Image is ' + _captcha_provider.chars[predict(test)])
+    test_mlp(dataset)
 
-
-if __name__ == '__main__':
-    main()
