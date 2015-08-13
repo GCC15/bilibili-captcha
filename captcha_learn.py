@@ -4,10 +4,13 @@ import numpy
 import theano
 import theano.tensor as T
 from sklearn.cross_validation import StratifiedShuffleSplit
+import pickle
 import time
+import os
 
 import helper
 import dataset_manager
+import config as c
 from captcha_provider import BilibiliCaptchaProvider
 
 _std_height = 20
@@ -16,10 +19,7 @@ _captcha_provider = BilibiliCaptchaProvider()
 
 
 # TODO: Clean up and update unnecessary codes and comments
-# TODO: write a function that returns the predicted label for a single test image
 # TODO: show error rate for each character
-# TODO: save the model parameter in a json file called model.json or whatever
-# so that it can be used to predict without optimization
 
 # Reference:
 # http://deeplearning.net/tutorial/logreg.html
@@ -144,12 +144,12 @@ class LogisticRegression(object):
     def getComparison(self, y):
         # TODO: print out prediction and target
         print("Predict: ")
-        print(self.y_pred) # needs to be modified to see our actual prediction
-        # instead of "argmax"
+        print(
+            self.y_pred)  # needs to be modified to see our actual prediction
+        #  instead of "argmax"
         print("Actual: ")
-        print(y.eval()) # seems to be correct but produce weird result
+        print(y.eval())  # seems to be correct but produce weird result
         # (y should be a vector, and shouldn't be 20 ALL THE TIME)
-
 
 
 class HiddenLayer(object):
@@ -412,7 +412,7 @@ def test_mlp(datasets, learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001,
     y = T.lvector('y')  # the labels are presented as 1D vector of [int] labels
 
     rng = numpy.random.RandomState(1234)
-    #rng = numpy.random.RandomState(int((time.time())))
+    # rng = numpy.random.RandomState(int((time.time())))
 
     # construct the MLP class
     classifier = MLP(
@@ -522,8 +522,8 @@ def test_mlp(datasets, learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001,
                 this_validation_loss = numpy.mean(validation_losses)
 
                 print(
-                    'epoch %i, minibatch %i/%i, validation error %f %%' %
-                    (
+                    'epoch {0}, minibatch {1}/{2}, validation error {3}'.format
+                        (
                         epoch,
                         minibatch_index + 1,
                         n_train_batches,
@@ -531,7 +531,8 @@ def test_mlp(datasets, learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001,
 
                     )
                 )
-                classifier.logRegressionLayer.getComparison(valid_set_y[minibatch_index])
+                # classifier.logRegressionLayer.getComparison(valid_set_y[
+                # minibatch_index])
                 # if we got the best validation score until now
                 if this_validation_loss < best_validation_loss:
                     # improve patience if loss improvement is good enough
@@ -549,10 +550,13 @@ def test_mlp(datasets, learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001,
                                    in range(n_test_batches)]
                     test_score = numpy.mean(test_losses)
 
-                    print(('     epoch %i, minibatch %i/%i, test error of '
-                           'best model %f %%') %
+                    print(('     epoch {0}, minibatch {1}/{2}, test error of '
+                           'best model {3}').format
                           (epoch, minibatch_index + 1, n_train_batches,
                            test_score * 100.))
+                    with open(os.path.join(c.get('dataset'), 'best_model.pkl'),
+                              'wb') as f:
+                        pickle.dump(classifier, f)
 
             if patience <= iter:
                 done_looping = True
@@ -564,8 +568,6 @@ def test_mlp(datasets, learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001,
         'iteration {1}, with test performance {2}'.format
         (best_validation_loss * 100, best_iter + 1, test_score * 100))
     print('Time used for testing the mlp is', end_time - start_time)
-
-
 
 
 def load_data():
@@ -592,21 +594,35 @@ def load_data():
     # target to the example with the same index in the input.
 
 
+def predict(data):
+    # data should be a numpy array of that is of length _std_height and
+    # _std_width
+
+    # load the saved model
+    classifier = pickle.load(
+        open(os.path.join(c.get('dataset'), 'best_model.pkl'), 'rb'))
+
+    # compile a predictor function
+    predict_model = theano.function(
+        inputs=[classifier.input],
+        outputs=classifier.logRegressionLayer.y_pred,
+    )
+    predicted_values = predict_model([data])
+    return predicted_values
+
+
 def main():
     dataset = load_data()
     inputs, targets = dataset
     print("Input Shape: " + str(inputs.shape))
     print("Target Shape: " + str(targets.shape))
-    '''
-    helper.show_image(
-        numpy.reshape(
-            inputs[random.randint(0, inputs.shape[0] - 1)],
-            (_std_height, _std_width)
-        ),
-        interp='nearest'
-    )
-    '''
-    test_mlp(dataset)
+    test = inputs[random.randint(0, inputs.shape[0] - 1)]
+    helper.show_image(numpy.reshape(test, (_std_height, _std_width)),
+                      interp='nearest'
+                      )
+    # test_mlp(dataset)
+    print(predict(test))
+    print('Image is ' + _captcha_provider.chars[predict(test)])
 
 
 if __name__ == '__main__':
