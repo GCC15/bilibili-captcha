@@ -20,6 +20,7 @@ _captcha_provider = BilibiliCaptchaProvider()
 
 _best_model_path = os.path.join(c.get('dataset'), c.get('best_model.pkl'))
 
+
 # TODO: show error rate for each character
 # TODO: Parameters need tuning
 
@@ -557,7 +558,7 @@ def _construct_mlp(datasets, learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001,
                         '    epoch {0}, minibatch {1}/{2}, test error of best '
                         'model {3}'.format(
                             epoch, minibatch_index + 1, n_train_batches,
-                            test_score * 100))
+                                   test_score * 100))
 
             if patience <= iteration:
                 done_looping = True
@@ -598,7 +599,7 @@ def _load_data():
 def predict(img):
     # data should be a numpy array that has not been resized
     data = helper.resize_image(img, _std_height, _std_width).flatten()
-    predicted_values = _predict_model([data])
+    predicted_values = _get_predict_model()([data])
     return _captcha_provider.chars[predicted_values]
 
 
@@ -615,6 +616,7 @@ def _load_classifier():
         reconstruct_model()
         return pickle.load(open(_best_model_path, 'rb'))
 
+
 def _update_classifier(classifier):
     global _classifier
     _classifier = classifier
@@ -622,10 +624,24 @@ def _update_classifier(classifier):
         pickle.dump(classifier, f)
 
 
-_classifier = _load_classifier()
+_classifier = None
+_predict_model = None
 
-_predict_model = theano.function(
-    inputs=[_classifier.input],
-    outputs=_classifier.logRegressionLayer.y_pred,
-    mode='FAST_RUN'
-)
+
+def _get_classifier():
+    global _classifier
+    if not _classifier:
+        _classifier = _load_classifier()
+    return _classifier
+
+
+def _get_predict_model():
+    global _predict_model
+    if not _predict_model:
+        classifier = _get_classifier()
+        _predict_model = theano.function(
+            inputs=[classifier.input],
+            outputs=classifier.logRegressionLayer.y_pred,
+            mode='FAST_RUN'
+        )
+    return _predict_model
