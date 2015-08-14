@@ -16,6 +16,7 @@ _std_height = 20
 _std_width = 15
 _captcha_provider = BilibiliCaptchaProvider()
 
+_best_model_path = os.path.join(c.get('dataset'), c.get('best_model.pkl'))
 
 # TODO: Clean up and update unnecessary codes and comments
 # TODO: show error rate for each character
@@ -551,8 +552,7 @@ def _construct_mlp(datasets, learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001,
                            'best model {3}').format
                           (epoch, minibatch_index + 1, n_train_batches,
                            test_score * 100.))
-                    with open(os.path.join(c.get('dataset'), 'best_model.pkl'),
-                              'wb') as f:
+                    with open(_best_model_path, 'wb') as f:
                         pickle.dump(classifier, f)
 
             if patience <= iter:
@@ -613,12 +613,11 @@ def reconstruct_model():
 
 
 def _load_best_model():
-    model_path = os.path.join(c.get('dataset'), c.get('best_model.pkl'))
     try:
-        return pickle.load(open(model_path, 'rb'))
+        return pickle.load(open(_best_model_path, 'rb'))
     except Exception as e:
         print(e)
-        print('Failed to load model from {}'.format(model_path))
+        print('Failed to load model from {}'.format(_best_model_path))
 
 
 _classifier = _load_best_model()
