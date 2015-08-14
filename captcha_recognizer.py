@@ -10,6 +10,7 @@ from helper import time_func, cm_greys, repeat, sort_by_occurrence
 from captcha_provider import BilibiliCaptchaProvider
 import captcha_learn
 
+
 class CaptchaRecognizer:
     def __init__(self, captcha_provider=BilibiliCaptchaProvider(),
                  h_tol=6 / 360,
@@ -94,21 +95,23 @@ class CaptchaRecognizer:
         return None
 
     # Recognize the captcha
-    def recognize(self, img, save_intermediate=False, verbose=False, reoptimize=False):
-        captcha = []
-        success = None
+    def recognize(self, img, save_intermediate=False, verbose=False, reconstruct=False):
+        seq = []
         char_images = self.partition(img, save_intermediate, verbose)
-        if reoptimize:
-            captcha_learn.reoptimize_model()
-
-        if char_images is not None and len(char_images) == 5:
+        if reconstruct:
+            captcha_learn.reconstruct_model()
+        if char_images is not None and len(char_images) == self.character_num:
             success = True
-            for i in range(len(char_images)):
-                captcha.append(captcha_learn.predict(char_images[i]))
-            captcha = ''.join(captcha)
+
+            def predict():
+                for i in range(len(char_images)):
+                    seq.append(captcha_learn.predict(char_images[i]))
+
+            time_func('predict' if verbose else None, predict)
+            seq = ''.join(seq)
         else:
             success = False
-        return success,captcha
+        return success, seq
 
     # Convert to a grayscale image using HSV
     def remove_noise_with_hsv(self, img):

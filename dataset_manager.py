@@ -125,7 +125,7 @@ def _get_image(directory, filename, mode='rgb'):
 
 # Get some images from a directory
 # set num = 0 or None to get all
-def _get_images(directory, num=None, mode='rgb'):
+def _get_images(directory, num=None, mode='rgb', return_basename=False):
     filenames = _list_png(directory)
     if num:
         if num > len(filenames):
@@ -136,7 +136,12 @@ def _get_images(directory, num=None, mode='rgb'):
             random.shuffle(filenames)
     else:
         num = len(filenames)
-    return [_get_image(directory, filenames[i], mode) for i in range(num)]
+    if return_basename:
+        return [(_remove_suffix(filenames[i]),
+                 _get_image(directory, filenames[i], mode))
+                for i in range(num)]
+    else:
+        return [_get_image(directory, filenames[i], mode) for i in range(num)]
 
 
 def _add_suffix(basename, suffix=_png):
@@ -158,7 +163,7 @@ def get_test_image(seq):
 
 
 def get_test_images(num=1):
-     return _get_images(_test_set_dir, num)
+    return _get_images(_test_set_dir, num)
 
 
 # Return a training image randomly if seq is None
@@ -170,7 +175,7 @@ def get_training_image(seq=None):
 
 
 def get_training_images(num=None):
-    return _get_images(_training_set_dir, num)
+    return _get_images(_training_set_dir, num, return_basename=True)
 
 
 def get_training_char_images(char, num=None):

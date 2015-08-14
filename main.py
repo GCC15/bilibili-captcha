@@ -2,23 +2,20 @@ import config as c
 import dataset_manager
 from captcha_recognizer import CaptchaRecognizer
 from captcha_provider import BilibiliCaptchaProvider
-
-# Below three imports is necessary for loading the pickle file, DO NOT DELETE
-from captcha_learn import MLP, LogisticRegression, HiddenLayer
+from helper import show_image
 
 
 def main():
-    dataset_manager.fetch_training_set(20)
-    # test_captcha_recognition()
-    dataset_manager.partition_training_images_to_chars()
+    # dataset_manager.fetch_training_set(20)
+    # test_recognize_training()
+    test_recognize_http(show_img=True)
+    # dataset_manager.partition_training_images_to_chars()
     # dataset_manager.partition_training_images_to_chars(force_update=True,
     # save=True)
     # dataset_manager.tune_partition_parameter()
-    # print(os.getcwd())
-    # open(os.path.join(c.get('dataset'), 'best_model.pkl'), 'rb')
 
 
-def test_captcha_recognition():
+def test_recognize_training():
     c.clear_temp()
     seq = None
 
@@ -49,19 +46,29 @@ def test_captcha_recognition():
     # seq = '2XML9'
     # seq = 'W9WU4'
 
-    # image = dataset_manager.get_training_image(seq)
-    # image = dataset_manager.get_test_image(seq)
-    a = BilibiliCaptchaProvider()
-    image = a.fetch()
-
-    success, captcha = CaptchaRecognizer().recognize(image,
-                                                     save_intermediate=True,
-                                                     verbose=True,
-                                                     reoptimize=False)
+    if seq:
+        image = dataset_manager.get_training_image(seq)
+    else:
+        seq, image = dataset_manager.get_training_image()
+    success, seq_r = CaptchaRecognizer().recognize(image, verbose=True, save_intermediate=True)
     if success:
-        print(captcha)
-        print('Recognized captcha is ', BilibiliCaptchaProvider().verify(captcha))
+        print('Result: {}'.format(seq == seq_r))
+        # image = dataset_manager.get_test_image(seq)
 
+
+def test_recognize_http(show_img=False):
+    provider = BilibiliCaptchaProvider()
+    recognizer = CaptchaRecognizer()
+    image = provider.fetch()
+    if show_img:
+        show_image(image)
+    success, seq = recognizer.recognize(image,
+                                        save_intermediate=True,
+                                        verbose=True,
+                                        reconstruct=False)
+    if success:
+        print(seq)
+        print('Recognized seq is {}'.format(provider.verify(seq)))
 
 
 if __name__ == '__main__':
