@@ -87,7 +87,7 @@ class LogisticRegression(object):
 
         # symbolic description of how to compute prediction as class whose
         # probability is maximal
-        self.y_pred = T.argmax(self.p_y_given_x, axis=1)
+        self.y_pred = T.argmax(self.p_y_given_x, axis=1,mode='FAST_RUN')
 
         # parameters of the model
         self.params = [self.W, self.b]
@@ -599,11 +599,7 @@ def predict(img):
     data = helper.resize_image(img, _std_height, _std_width).flatten()
 
     # compile a predictor function
-    predict_model = theano.function(
-        inputs=[_classifier.input],
-        outputs=_classifier.logRegressionLayer.y_pred,
-    )
-    predicted_values = predict_model([data])
+    predicted_values = _predict_model([data])
     # print('Image is ' + _captcha_provider.chars[predicted_values])
     return _captcha_provider.chars[predicted_values]
 
@@ -633,3 +629,8 @@ def _set_classifier(classifier):
 
 _classifier = None
 _set_classifier(_load_classifier())
+_predict_model = theano.function(
+        inputs=[_classifier.input],
+        outputs=_classifier.logRegressionLayer.y_pred,
+        mode='FAST_RUN'
+    )
