@@ -2,7 +2,7 @@ import config as c
 import dataset_manager
 from captcha_recognizer import CaptchaRecognizer
 from captcha_provider import BilibiliCaptchaProvider
-from helper import show_image
+from helper import show_image, time_func
 import time
 import captcha_learn
 
@@ -11,7 +11,8 @@ def main():
     # dataset_manager.fetch_training_set(20)
     # test_recognize_training()
     # captcha_learn.reconstruct_model()
-    test_recognize_http(False, 20)
+    # test_recognize_http(False, 100)
+    test_recognize_http(False)
     # dataset_manager.partition_training_images_to_chars()
     # dataset_manager.partition_training_images_to_chars(force_update=True,
     # save=True)
@@ -69,7 +70,10 @@ def test_recognize_http(show_img=False, num=1):
     wrong = 0
     for i in range(num):
         time.sleep(0.2)
-        image = provider.fetch()
+        image = time_func(
+            'fetch' if num == 1 else None,
+            lambda: provider.fetch()
+        )
         if show_img and num == 1:
             show_image(image)
         if num == 1:
@@ -84,9 +88,12 @@ def test_recognize_http(show_img=False, num=1):
                                                 reconstruct=False)
         if success:
             print(seq)
-            result = provider.verify(seq)
+            result = time_func(
+                'verify' if num == 1 else None,
+                lambda: provider.verify(seq)
+            )
             if num == 1:
-                print('Recognized seq is {}'.format())
+                print('Recognized seq is {}'.format(result))
             if result:
                 right += 1
             else:
