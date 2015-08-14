@@ -1,10 +1,11 @@
 from abc import ABCMeta, abstractmethod
 from io import BytesIO
 import random
-from helper import show_image
+
 import requests
 import matplotlib.image as mpimg
 
+from helper import show_image
 
 # A HttpCaptchaProvider provides a state machine interface.
 # It is assumed that "fetch" and "verify" can be done through HTTP/HTTPS urls.

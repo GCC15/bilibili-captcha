@@ -1,18 +1,23 @@
+# The place to run the program and main place for testing
+
+import time
+
 import config as c
 import dataset_manager
 from captcha_recognizer import CaptchaRecognizer
 from captcha_provider import BilibiliCaptchaProvider
 from helper import show_image, time_func
-import time
 # noinspection PyUnresolvedReferences
 import captcha_learn
 
 
 def main():
+    pass
     # test_recognize_training()
     # captcha_learn.reconstruct_model()
-    test_recognize_http()
-    # test_recognize_http(False, 50)
+    # test_recognize_http()
+    # test_recognize_http(False, 50, True)
+    # dataset_manager.get_training_images(1)
     # dataset_manager.partition_training_images_to_chars()
     # dataset_manager.partition_training_images_to_chars(force_update=True,
     # save=True)
@@ -23,7 +28,7 @@ def test_recognize_training():
     c.clear_temp()
     seq = None
 
-    # Below are all the training images that are partitioned falsely
+    # Below are sample training images that are partitioned falsely
     # seq = 'YFF5M'
     # seq = 'W1PM4'
     # seq = 'W1R4R'
@@ -62,14 +67,13 @@ def test_recognize_training():
 
 
 def test_recognize_http(show_img=False, num=1, reconstruct=False):
-    start = time.time()
+    time_start = time.time()
     provider = BilibiliCaptchaProvider()
     recognizer = CaptchaRecognizer()
     fail = 0
     right = 0
     wrong = 0
     for i in range(num):
-        time.sleep(0.2)
         image = time_func(
             'fetch' if num == 1 else None,
             lambda: provider.fetch()
@@ -112,8 +116,8 @@ def test_recognize_http(show_img=False, num=1, reconstruct=False):
     print('Total success rate: ', right / num)
     print('Success rate when confident: ',
           right / (right + wrong) if right + wrong > 0 else 0)
-    end = time.time()
-    print('Time used to test recognize http is: ', end - start)
+    time_end = time.time()
+    print('Time used to test recognize http is: ', time_end - time_start)
 
 
 if __name__ == '__main__':

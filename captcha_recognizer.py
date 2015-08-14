@@ -1,4 +1,4 @@
-# Handle image processing before giving over to captcha learner
+# Handle image processing before handing over to captcha learner
 
 import matplotlib.colors as colors
 import matplotlib.image as mpimg
@@ -31,11 +31,12 @@ class CaptchaRecognizer:
 
     # Try to partition a CAPTCHA into each char image
     # save_intermediate: whether I should save intermediate images
+    # TODO: Forced partition
     def partition(self, img, save_intermediate=False, verbose=False):
         if save_intermediate:
             mpimg.imsave(c.temp_path('00.origin.png'), img)
 
-        # 1
+        # step 1
         img_01 = time_func(
             'remove_noise_with_hsv' if verbose else None,
             lambda: self.remove_noise_with_hsv(img)
@@ -43,7 +44,7 @@ class CaptchaRecognizer:
         if save_intermediate:
             mpimg.imsave(c.temp_path('01.hsv.png'), img_01, cmap=cm_greys)
 
-        # 2
+        # step 2
         img_02 = time_func(
             'remove_noise_with_neighbors' if verbose else None,
             lambda: repeat(self.remove_noise_with_neighbors, 2)(img_01)
@@ -51,7 +52,7 @@ class CaptchaRecognizer:
         if save_intermediate:
             mpimg.imsave(c.temp_path('02.neighbor.png'), img_02, cmap=cm_greys)
 
-        # 3
+        # step 3
         labels, object_slices = time_func(
             'segment_with_label' if verbose else None,
             lambda: self.segment_with_label(img_02)
@@ -60,6 +61,9 @@ class CaptchaRecognizer:
             print('{} connected components found'.format(len(object_slices)))
         if save_intermediate:
             mpimg.imsave(c.temp_path('03.00000.png'), labels)
+
+        # step 4
+
         # Arrange the segments from left to right
         xmin_arr = np.array([s[1].start for s in object_slices])
         sort_index = xmin_arr.argsort()
@@ -95,7 +99,8 @@ class CaptchaRecognizer:
         return None
 
     # Recognize the captcha
-    def recognize(self, img, save_intermediate=False, verbose=False, reconstruct=False):
+    def recognize(self, img, save_intermediate=False, verbose=False,
+                  reconstruct=False):
         seq = []
         char_images = self.partition(img, save_intermediate, verbose)
         if reconstruct:
@@ -121,7 +126,7 @@ class CaptchaRecognizer:
         # noinspection PyTypeChecker
         img_int = np.dot(np.rint(img * 255), np.power(256, np.arange(3)))
         color_array = sort_by_occurrence(img_int.flatten())
-        # 2nd most frequent
+        # standard color is the 2nd most frequent color
         std_color = color_array[1]
         std_b, mod = divmod(std_color, 256 ** 2)
         std_g, std_r = divmod(mod, 256)
@@ -157,6 +162,7 @@ class CaptchaRecognizer:
         img_pad_a = np.zeros(pad_shape)
         img_pad_b = np.zeros(pad_shape)
         neighbors = [-1, 0, 1]
+        # Add padding in a vectorized manner
         for dy in neighbors:
             for dx in neighbors:
                 if dy == 0 and dx == 0:

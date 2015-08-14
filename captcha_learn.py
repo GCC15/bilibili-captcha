@@ -12,12 +12,13 @@ import dataset_manager
 import config as c
 from captcha_provider import BilibiliCaptchaProvider
 
+# The standard shape of one character, determined through experience
 _std_height = 20
 _std_width = 15
+
 _captcha_provider = BilibiliCaptchaProvider()
 
 _best_model_path = os.path.join(c.get('dataset'), c.get('best_model.pkl'))
-
 
 # TODO: show error rate for each character
 # TODO: Parameters need tuning
@@ -556,7 +557,7 @@ def _construct_mlp(datasets, learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001,
                         '    epoch {0}, minibatch {1}/{2}, test error of best '
                         'model {3}'.format(
                             epoch, minibatch_index + 1, n_train_batches,
-                                   test_score * 100))
+                            test_score * 100))
 
             if patience <= iteration:
                 done_looping = True
@@ -610,10 +611,9 @@ def reconstruct_model():
 def _load_classifier():
     try:
         return pickle.load(open(_best_model_path, 'rb'))
-    except Exception as e:
-        print(e)
-        print('Failed to load model from {}'.format(_best_model_path))
-
+    except:
+        reconstruct_model()
+        return pickle.load(open(_best_model_path, 'rb'))
 
 def _update_classifier(classifier):
     global _classifier

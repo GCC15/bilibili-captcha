@@ -21,6 +21,12 @@ _training_set_dir = os.path.join(_dataset_dir, c.get('training'))
 _training_char_dir = os.path.join(_dataset_dir, c.get('training_char'))
 _test_set_dir = os.path.join(_dataset_dir, c.get('test'))
 
+
+c.make_dirs(_training_set_dir)
+c.make_dirs(_training_char_dir)
+c.make_dirs(_test_set_dir)
+
+
 _PARTITION_JSON = os.path.join(_dataset_dir, 'partition.json')
 _NUM_TOTAL = '###total'
 _NUM_FAIL = '##fail'
@@ -30,7 +36,9 @@ _NUM_CHAR = '#{}'
 _FAIL = 'fail'
 _SUCCESS = 'success'
 
+# the sequence that tells the program to skip a image when fetching
 _SEQ_SKIP = '0'
+
 _captcha_provider = BilibiliCaptchaProvider()
 
 
@@ -38,9 +46,6 @@ def _get_training_char_dir(char):
     return os.path.join(_training_char_dir, char)
 
 
-c.make_dirs(_training_set_dir)
-c.make_dirs(_training_char_dir)
-c.make_dirs(_test_set_dir)
 for _char in _captcha_provider.chars:
     c.make_dirs(_get_training_char_dir(_char))
 
@@ -87,8 +92,7 @@ def _fetch_captchas_to_dir(directory, num=1):
 
 
 def clear_training_set():
-    pass  # for safety reason
-    # c.clear_dir(_training_set_dir)
+    c.clear_dir(_training_set_dir)
 
 
 def clear_training_chars():
@@ -101,9 +105,10 @@ def clear_test_set():
     c.clear_dir(_test_set_dir)
 
 
-# def clear_dataset():
-#     clear_training_set()
-#     clear_test_set()
+def clear_dataset():
+    clear_training_set()
+    clear_training_chars()
+    clear_test_set()
 
 
 def fetch_training_set(num=1):
@@ -281,6 +286,7 @@ def partition_training_images_to_chars(captcha_recognizer=CaptchaRecognizer(),
     return total_success_rate
 
 
+# Tune the parameter by grid search
 # The best parameter combination now is (6,36,40)
 def tune_partition_parameter():
     h_tol = [6]
@@ -290,7 +296,8 @@ def tune_partition_parameter():
     for h in h_tol:
         for s in s_tol:
             for v in v_tol:
-                recognizer = CaptchaRecognizer(_captcha_provider, h / 360, s / 100,
+                recognizer = CaptchaRecognizer(_captcha_provider, h / 360,
+                                               s / 100,
                                                v / 100)
                 rate[
                     h - 6, s - 36, v - 40] = \

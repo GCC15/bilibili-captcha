@@ -69,6 +69,7 @@ def _lj(r, delta=4):
 
 
 # https://en.wikipedia.org/wiki/Simulated_annealing
+# Not useful to the program, but produces impressive result
 def anneal(img, num_steps=1000):
     np.seterr(divide='ignore', invalid='ignore')
     height, width = img.shape

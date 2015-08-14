@@ -6,12 +6,12 @@ The Python program attempts to recognize [CAPTCHA images](http://www.bilibili.co
 
 # Dependencies
 
-- numpy
+- numpy 
 - matplotlib
-- scipy
+- scipy 
 - requests
 - theano
-- sklearn
+- scikit-learn
 
 # Usage
 
