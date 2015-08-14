@@ -104,6 +104,7 @@ class CaptchaRecognizer:
             success = True
 
             def predict():
+                nonlocal seq
                 for i in range(len(char_images)):
                     seq.append(captcha_learn.predict(char_images[i]))
 

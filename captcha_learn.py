@@ -20,6 +20,7 @@ _best_model_path = os.path.join(c.get('dataset'), c.get('best_model.pkl'))
 
 
 # TODO: show error rate for each character
+# TODO: Parameters need tuning
 
 # Reference:
 # http://deeplearning.net/tutorial/logreg.html
@@ -418,6 +419,7 @@ def _construct_mlp(datasets, learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001,
     y = T.lvector('y')  # the labels are presented as 1D vector of [int] labels
 
     # set a random state that is related to the time
+    # noinspection PyUnresolvedReferences
     rng = numpy.random.RandomState(int((time.time())))
 
     # construct the MLP class
@@ -538,8 +540,8 @@ def _construct_mlp(datasets, learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001,
                 # if we got the best validation score until now
                 if this_validation_loss < best_validation_loss:
                     # improve patience if loss improvement is good enough
-                    if this_validation_loss < best_validation_loss * \
-                            improvement_threshold:
+                    if (this_validation_loss <
+                                best_validation_loss * improvement_threshold):
                         patience = max(patience, iteration * patience_increase)
 
                     best_validation_loss = this_validation_loss
@@ -554,9 +556,7 @@ def _construct_mlp(datasets, learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001,
                         '    epoch {0}, minibatch {1}/{2}, test error of best '
                         'model {3}'.format(
                             epoch, minibatch_index + 1, n_train_batches,
-                            test_score * 100.))
-                    _set_classifier(classifier)
-                    _save_classifier(classifier)
+                                   test_score * 100))
 
             if patience <= iteration:
                 done_looping = True
@@ -568,6 +568,7 @@ def _construct_mlp(datasets, learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001,
         'iteration {1}, with test performance {2}'.format
         (best_validation_loss * 100, best_iter + 1, test_score * 100))
     print('Time used for testing the mlp is', end_time - start_time)
+    return classifier
 
 
 def _load_data():
@@ -594,7 +595,7 @@ def _load_data():
 
 
 def predict(img):
-    # data should be a numpy array of that has not been resized
+    # data should be a numpy array that has not been resized
     data = helper.resize_image(img, _std_height, _std_width).flatten()
     predicted_values = _predict_model([data])
     return _captcha_provider.chars[predicted_values]
@@ -602,7 +603,8 @@ def predict(img):
 
 def reconstruct_model():
     dataset = _load_data()
-    _construct_mlp(dataset)
+    classifier = _construct_mlp(dataset)
+    _update_classifier(classifier)
 
 
 def _load_classifier():
@@ -613,18 +615,15 @@ def _load_classifier():
         print('Failed to load model from {}'.format(_best_model_path))
 
 
-def _save_classifier(classifier):
+def _update_classifier(classifier):
+    global _classifier
+    _classifier = classifier
     with open(_best_model_path, 'wb') as f:
         pickle.dump(classifier, f)
 
 
-def _set_classifier(classifier):
-    global _classifier
-    _classifier = classifier
+_classifier = _load_classifier()
 
-
-_classifier = None
-_set_classifier(_load_classifier())
 _predict_model = theano.function(
     inputs=[_classifier.input],
     outputs=_classifier.logRegressionLayer.y_pred,

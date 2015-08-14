@@ -4,15 +4,15 @@ from captcha_recognizer import CaptchaRecognizer
 from captcha_provider import BilibiliCaptchaProvider
 from helper import show_image, time_func
 import time
+# noinspection PyUnresolvedReferences
 import captcha_learn
 
 
 def main():
-    # dataset_manager.fetch_training_set(20)
     # test_recognize_training()
     # captcha_learn.reconstruct_model()
-    # test_recognize_http(False, 100)
-    test_recognize_http(False,40,True)
+    test_recognize_http()
+    # test_recognize_http(False, 50)
     # dataset_manager.partition_training_images_to_chars()
     # dataset_manager.partition_training_images_to_chars(force_update=True,
     # save=True)
@@ -84,14 +84,14 @@ def test_recognize_http(show_img=False, num=1, reconstruct=False):
         else:
             if i == 0:
                 success, seq = recognizer.recognize(image,
-                                                save_intermediate=False,
-                                                verbose=False,
-                                                reconstruct=reconstruct)
+                                                    save_intermediate=False,
+                                                    verbose=False,
+                                                    reconstruct=reconstruct)
             else:
                 success, seq = recognizer.recognize(image,
-                                                save_intermediate=False,
-                                                verbose=False,
-                                                reconstruct=False)
+                                                    save_intermediate=False,
+                                                    verbose=False,
+                                                    reconstruct=False)
         if success:
             print(seq)
             result = time_func(
