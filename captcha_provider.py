@@ -40,7 +40,7 @@ class HttpCaptchaProvider:
                 )
                 break
             except Exception as e:
-                print(e)
+                print('Exception occurs when fetching captcha', e)
         return None if r is None else mpimg.imread(BytesIO(r.content))
 
     def verify(self, seq):
@@ -128,7 +128,7 @@ class BilibiliCaptchaProvider(HttpCaptchaProvider, NormalSeqSet):
         if r_json['status']:
             return True
         else:
-            print(r_json)
+            print('The response of verifying captcha is', r_json['message'])
             return False
 
     def canonicalize_seq(self, seq):

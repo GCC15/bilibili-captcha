@@ -12,7 +12,7 @@ def main():
     # test_recognize_training()
     # captcha_learn.reconstruct_model()
     # test_recognize_http(False, 100)
-    test_recognize_http(False)
+    test_recognize_http(False,40,True)
     # dataset_manager.partition_training_images_to_chars()
     # dataset_manager.partition_training_images_to_chars(force_update=True,
     # save=True)
@@ -61,7 +61,7 @@ def test_recognize_training():
         # image = dataset_manager.get_test_image(seq)
 
 
-def test_recognize_http(show_img=False, num=1):
+def test_recognize_http(show_img=False, num=1, reconstruct=False):
     start = time.time()
     provider = BilibiliCaptchaProvider()
     recognizer = CaptchaRecognizer()
@@ -80,9 +80,15 @@ def test_recognize_http(show_img=False, num=1):
             success, seq = recognizer.recognize(image,
                                                 save_intermediate=True,
                                                 verbose=True,
-                                                reconstruct=False)
+                                                reconstruct=reconstruct)
         else:
-            success, seq = recognizer.recognize(image,
+            if i == 0:
+                success, seq = recognizer.recognize(image,
+                                                save_intermediate=False,
+                                                verbose=False,
+                                                reconstruct=reconstruct)
+            else:
+                success, seq = recognizer.recognize(image,
                                                 save_intermediate=False,
                                                 verbose=False,
                                                 reconstruct=False)

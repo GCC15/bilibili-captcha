@@ -1,6 +1,6 @@
-import timeit
 import pickle
 import os
+import time
 
 import numpy
 import theano
@@ -19,7 +19,6 @@ _captcha_provider = BilibiliCaptchaProvider()
 _best_model_path = os.path.join(c.get('dataset'), c.get('best_model.pkl'))
 
 
-# TODO: Clean up and update unnecessary codes and comments
 # TODO: show error rate for each character
 
 # Reference:
@@ -87,7 +86,7 @@ class LogisticRegression(object):
 
         # symbolic description of how to compute prediction as class whose
         # probability is maximal
-        self.y_pred = T.argmax(self.p_y_given_x, axis=1,mode='FAST_RUN')
+        self.y_pred = T.argmax(self.p_y_given_x, axis=1)
 
         # parameters of the model
         self.params = [self.W, self.b]
@@ -142,15 +141,17 @@ class LogisticRegression(object):
         else:
             raise NotImplementedError()
 
-    def getComparison(self, y):
-        # TODO: print out prediction and target
-        print("Predict: ")
-        print(
-            self.y_pred)  # needs to be modified to see our actual prediction
-        #  instead of "argmax"
-        print("Actual: ")
-        print(y.eval())  # seems to be correct but produce weird result
-        # (y should be a vector, and shouldn't be 20 ALL THE TIME)
+            # def getComparison(self, y):
+            #     # TODO: print out prediction and target
+            #     print("Predict: ")
+            #     print(
+            #         self.y_pred)  # needs to be modified to see our actual
+            # prediction
+            #     #  instead of "argmax"
+            #     print("Actual: ")
+            #     print(y.eval())  # seems to be correct but produce weird
+            # result
+            #     # (y should be a vector, and shouldn't be 20 ALL THE TIME)
 
 
 class HiddenLayer(object):
@@ -161,7 +162,7 @@ class HiddenLayer(object):
         sigmoidal activation function. Weight matrix W is of shape (n_in,n_out)
         and the bias vector b is of shape (n_out,).
 
-        NOTE : The nonlinearity used here is tanh
+        NOTE : The non-linearity used here is tanh
 
         Hidden unit activation is given by: tanh(dot(input,W) + b)
 
@@ -319,25 +320,29 @@ def _construct_mlp(datasets, learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001,
 
     Note: Parameters need tuning.
 
+    :type datasets: tuple
+    :param datasets: (inputs, targets)
+
     :type learning_rate: float
     :param learning_rate: learning rate used (factor for the stochastic
     gradient
 
     :type L1_reg: float
-    :param L1_reg: L1-norm's weight when added to the cost (see
-    regularization)
+    :param L1_reg: L1-norm's weight when added to the cost (see regularization)
 
     :type L2_reg: float
-    :param L2_reg: L2-norm's weight when added to the cost (see
-    regularization)
+    :param L2_reg: L2-norm's weight when added to the cost (see regularization)
 
     :type n_epochs: int
     :param n_epochs: maximal number of epochs to run the optimizer
 
-    :type datasets: tuple
-    :param datasets: (inputs, targets)
+    :type batch_size: int
+    :param batch_size: number of examples in one batch
 
-   """
+    :type n_hidden: int
+    :param n_hidden: number of hidden units to be used in class HiddenLayer
+
+     """
     inputs, targets = datasets
     temp_train_set_x = []
     temp_train_set_y = []
@@ -380,12 +385,12 @@ def _construct_mlp(datasets, learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001,
     valid_set_y = valid_set_y[0]
 
     # check shape
-    print("train_set_x shape: " + str(train_set_x.shape))
-    print("train_set_y shape: " + str(train_set_y.shape))
-    print("valid_set_x shape: " + str(valid_set_x.shape))
-    print("valid_set_y shape: " + str(valid_set_y.shape))
-    print("test_set_x shape: " + str(test_set_x.shape))
-    print("test_set_y shape: " + str(test_set_y.shape))
+    # print("train_set_x shape: " + str(train_set_x.shape))
+    # print("train_set_y shape: " + str(train_set_y.shape))
+    # print("valid_set_x shape: " + str(valid_set_x.shape))
+    # print("valid_set_y shape: " + str(valid_set_y.shape))
+    # print("test_set_x shape: " + str(test_set_x.shape))
+    # print("test_set_y shape: " + str(test_set_y.shape))
 
     # convert to theano.shared variable
     train_set_x = theano.shared(value=train_set_x, name='train_set_x')
@@ -401,9 +406,9 @@ def _construct_mlp(datasets, learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001,
     n_test_batches = int(test_set_x.get_value().shape[0] / batch_size)
 
     # check batch
-    print("n_train_batches:" + str(n_train_batches))
-    print("n_valid_batches:" + str(n_valid_batches))
-    print("n_test_batches:" + str(n_test_batches))
+    # print("n_train_batches:" + str(n_train_batches))
+    # print("n_valid_batches:" + str(n_valid_batches))
+    # print("n_test_batches:" + str(n_test_batches))
 
     print('... building the model')
 
@@ -412,8 +417,8 @@ def _construct_mlp(datasets, learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001,
     x = T.matrix('x')  # the data is presented as rasterized images
     y = T.lvector('y')  # the labels are presented as 1D vector of [int] labels
 
-    rng = numpy.random.RandomState(1234)
-    # rng = numpy.random.RandomState(int((time.time())))
+    # set a random state that is related to the time
+    rng = numpy.random.RandomState(int((time.time())))
 
     # construct the MLP class
     classifier = MLP(
@@ -441,7 +446,8 @@ def _construct_mlp(datasets, learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001,
         givens={
             x: test_set_x[index * batch_size:(index + 1) * batch_size],
             y: test_set_y[index * batch_size:(index + 1) * batch_size]
-        }
+        },
+        mode='FAST_RUN'
     )
 
     validate_model = theano.function(
@@ -450,7 +456,8 @@ def _construct_mlp(datasets, learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001,
         givens={
             x: valid_set_x[index * batch_size:(index + 1) * batch_size],
             y: valid_set_y[index * batch_size:(index + 1) * batch_size]
-        }
+        },
+        mode='FAST_RUN'
     )
 
     # compute the gradient of cost with respect to theta (sorted in params)
@@ -479,44 +486,40 @@ def _construct_mlp(datasets, learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001,
         givens={
             x: train_set_x[index * batch_size: (index + 1) * batch_size],
             y: train_set_y[index * batch_size: (index + 1) * batch_size]
-        }
+        },
+        mode='FAST_RUN'
     )
 
     print('... training')
 
     # early-stopping parameters
     patience = 10000  # look as this many examples regardless
-    patience_increase = 2  # wait this much longer when a new best is
-    # found
+    patience_increase = 2  # wait this much longer when a new best is found
     improvement_threshold = 0.995  # a relative improvement of this much is
     # considered significant
+
     if T.lt(n_train_batches, patience / 2):
         validation_frequency = n_train_batches
     else:
         validation_frequency = patience / 2
-    # go through this many
-    # minibatches before checking the network
-    # on the validation set; in this case we
-    # check every epoch
+    # go through this many minibatches before checking the network
+    # on the validation set; in this case we check every epoch
 
     best_validation_loss = numpy.inf
     best_iter = 0
     test_score = 0.
-    start_time = timeit.default_timer()
+    start_time = time.time()
 
     epoch = 0
     done_looping = False
 
     while (epoch < n_epochs) and (not done_looping):
         epoch += 1
-        for minibatch_index in range(
-                n_train_batches):
-
+        for minibatch_index in range(n_train_batches):
             minibatch_avg_cost = train_model(minibatch_index)
-            # iteration number
-            iter = (epoch - 1) * n_train_batches + minibatch_index
+            iteration = (epoch - 1) * n_train_batches + minibatch_index
 
-            if (iter + 1) % validation_frequency == 0:
+            if (iteration + 1) % validation_frequency == 0:
                 # compute zero-one loss on validation set
                 validation_losses = [validate_model(i) for i
                                      in range(n_valid_batches)]
@@ -535,32 +538,31 @@ def _construct_mlp(datasets, learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001,
                 # if we got the best validation score until now
                 if this_validation_loss < best_validation_loss:
                     # improve patience if loss improvement is good enough
-                    if (
-                                this_validation_loss < best_validation_loss *
-                                improvement_threshold
-                    ):
-                        patience = max(patience, iter * patience_increase)
+                    if this_validation_loss < best_validation_loss * \
+                            improvement_threshold:
+                        patience = max(patience, iteration * patience_increase)
 
                     best_validation_loss = this_validation_loss
-                    best_iter = iter
+                    best_iter = iteration
 
                     # test it on the test set
                     test_losses = [test_model(i) for i
                                    in range(n_test_batches)]
                     test_score = numpy.mean(test_losses)
 
-                    print(('     epoch {0}, minibatch {1}/{2}, test error of '
-                           'best model {3}').format
-                          (epoch, minibatch_index + 1, n_train_batches,
-                           test_score * 100.))
+                    print(
+                        '    epoch {0}, minibatch {1}/{2}, test error of best '
+                        'model {3}'.format(
+                            epoch, minibatch_index + 1, n_train_batches,
+                            test_score * 100.))
                     _set_classifier(classifier)
                     _save_classifier(classifier)
 
-            if patience <= iter:
+            if patience <= iteration:
                 done_looping = True
                 break
 
-    end_time = timeit.default_timer()
+    end_time = time.time()
     print(
         'Optimization complete. Best validation score of {0} obtained at '
         'iteration {1}, with test performance {2}'.format
@@ -583,8 +585,7 @@ def _load_data():
     targets = numpy.array(target_list, dtype=numpy.int64)
     return inputs, targets
     # Loading the dataset
-    # Output format: [train_set, valid_set, test_set]
-    # train_set, valid_set, test_set format: tuple(input, target)
+    # Output format: tuple(input, target)
     # input is an numpy.ndarray of 2 dimensions (a matrix)
     # witch row's correspond to an example. target is a
     # numpy.ndarray of 1 dimensions (vector)) that have the same length as
@@ -594,13 +595,8 @@ def _load_data():
 
 def predict(img):
     # data should be a numpy array of that has not been resized
-
-    # helper.show_image(img)
     data = helper.resize_image(img, _std_height, _std_width).flatten()
-
-    # compile a predictor function
     predicted_values = _predict_model([data])
-    # print('Image is ' + _captcha_provider.chars[predicted_values])
     return _captcha_provider.chars[predicted_values]
 
 
@@ -630,7 +626,7 @@ def _set_classifier(classifier):
 _classifier = None
 _set_classifier(_load_classifier())
 _predict_model = theano.function(
-        inputs=[_classifier.input],
-        outputs=_classifier.logRegressionLayer.y_pred,
-        mode='FAST_RUN'
-    )
+    inputs=[_classifier.input],
+    outputs=_classifier.logRegressionLayer.y_pred,
+    mode='FAST_RUN'
+)
