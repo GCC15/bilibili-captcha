@@ -604,7 +604,7 @@ def predict(img):
         outputs=_classifier.logRegressionLayer.y_pred,
     )
     predicted_values = predict_model([data])
-    print('Image is ' + _captcha_provider.chars[predicted_values])
+    # print('Image is ' + _captcha_provider.chars[predicted_values])
     return _captcha_provider.chars[predicted_values]
 
 

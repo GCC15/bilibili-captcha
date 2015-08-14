@@ -3,12 +3,15 @@ import dataset_manager
 from captcha_recognizer import CaptchaRecognizer
 from captcha_provider import BilibiliCaptchaProvider
 from helper import show_image
+import time
+import captcha_learn
 
 
 def main():
     # dataset_manager.fetch_training_set(20)
     # test_recognize_training()
-    test_recognize_http(show_img=True)
+    # captcha_learn.reconstruct_model()
+    test_recognize_http(False, 20)
     # dataset_manager.partition_training_images_to_chars()
     # dataset_manager.partition_training_images_to_chars(force_update=True,
     # save=True)
@@ -50,25 +53,54 @@ def test_recognize_training():
         image = dataset_manager.get_training_image(seq)
     else:
         seq, image = dataset_manager.get_training_image()
-    success, seq_r = CaptchaRecognizer().recognize(image, verbose=True, save_intermediate=True)
+    success, seq_r = CaptchaRecognizer().recognize(image, verbose=True,
+                                                   save_intermediate=True)
     if success:
         print('Result: {}'.format(seq == seq_r))
         # image = dataset_manager.get_test_image(seq)
 
 
-def test_recognize_http(show_img=False):
+def test_recognize_http(show_img=False, num=1):
+    start = time.time()
     provider = BilibiliCaptchaProvider()
     recognizer = CaptchaRecognizer()
-    image = provider.fetch()
-    if show_img:
-        show_image(image)
-    success, seq = recognizer.recognize(image,
-                                        save_intermediate=True,
-                                        verbose=True,
-                                        reconstruct=False)
-    if success:
-        print(seq)
-        print('Recognized seq is {}'.format(provider.verify(seq)))
+    fail = 0
+    right = 0
+    wrong = 0
+    for i in range(num):
+        time.sleep(0.2)
+        image = provider.fetch()
+        if show_img and num == 1:
+            show_image(image)
+        if num == 1:
+            success, seq = recognizer.recognize(image,
+                                                save_intermediate=True,
+                                                verbose=True,
+                                                reconstruct=False)
+        else:
+            success, seq = recognizer.recognize(image,
+                                                save_intermediate=False,
+                                                verbose=False,
+                                                reconstruct=False)
+        if success:
+            print(seq)
+            result = provider.verify(seq)
+            if num == 1:
+                print('Recognized seq is {}'.format())
+            if result:
+                right += 1
+            else:
+                wrong += 1
+        else:
+            fail += 1
+    print('Fail: ', fail)
+    print('Right: ', right)
+    print('Wrong: ', wrong)
+    print('Total success rate: ', right / num)
+    print('Success rate when confident: ',
+          right / (right + wrong) if right + wrong > 0 else 0)
+    end = time.time()
+    print('Time used to test recognize http is: ', end - start)
 
 
 if __name__ == '__main__':

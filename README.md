@@ -36,5 +36,13 @@ The Python program attempts to recognize [CAPTCHA images](http://www.bilibili.co
 
 [Using AI to beat CAPTCHA and post comment spam](http://www.brains-n-brawn.com/default.aspx?vDir=aicaptcha)
 
+Machine Learning:
+
+[Deep Learning Tutorial](http://deeplearning.net/tutorial/contents.html)
+
+[Classifying MNIST digits using Logistic Regression](http://deeplearning.net/tutorial/logreg.html)
+
+[Multilayer Perceptron](http://deeplearning.net/tutorial/mlp.html)
+
 # License
 This software is licensed under the MIT License. See [LICENSE](LICENSE).
