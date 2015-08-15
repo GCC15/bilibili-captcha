@@ -7,12 +7,15 @@ import matplotlib.image as mpimg
 
 from helper import show_image
 
-# A HttpCaptchaProvider provides a state machine interface.
-# It is assumed that "fetch" and "verify" can be done through HTTP/HTTPS urls.
-# You can
-# 1. Fetch a CAPTCHA image;
-# 2. Verify if an answer to the last fetched CAPTCHA is correct.
+
 class HttpCaptchaProvider:
+    """
+    A HttpCaptchaProvider provides a state machine interface.
+    It is assumed that "fetch" and "verify" can be done through HTTP/HTTPS urls.
+    You can
+    1. Fetch a CAPTCHA image;
+    2. Verify if an answer to the last fetched CAPTCHA is correct.
+    """
     __metaclass__ = ABCMeta
 
     def __init__(self, fetch_method, fetch_url, fetch_headers,
@@ -28,7 +31,7 @@ class HttpCaptchaProvider:
 
     def fetch(self, retry_limit=3):
         self.__is_virgin = False
-        print('Fetching CAPTCHA image from {}'.format(self.__fetch_url))
+        print('Fetching CAPTCHA from {}'.format(self.__fetch_url))
         r = None
         for num_retries in range(retry_limit):
             if num_retries > 0:
@@ -157,4 +160,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-

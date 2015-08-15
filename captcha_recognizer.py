@@ -16,12 +16,17 @@ class CaptchaRecognizer:
                  h_tol=6 / 360,
                  s_tol=36 / 100,
                  v_tol=40 / 100):
+        self.character_num = captcha_provider.seq_length
+
         # Three parameters to be used in remove_noise_with_hsv
         self.h_tolerance = h_tol
         self.s_tolerance = s_tol
         self.v_tolerance = v_tol
 
-        self.character_num = captcha_provider.seq_length
+        # parameters to be used in remove_noise_with_neighbors
+        self.neighbor_low = 0
+        self.neighbor_high = 7
+        self.neighbor_ratio = 1.3
 
         # Four parameters to be used in partition
         self.char_width_min = 5
@@ -30,7 +35,6 @@ class CaptchaRecognizer:
         self.char_height_max = 30
 
     # Try to partition a CAPTCHA into each char image
-    # save_intermediate: whether I should save intermediate images
     # TODO: Forced partition
     def partition(self, img, save_intermediate=False, verbose=False):
         if save_intermediate:
@@ -68,8 +72,7 @@ class CaptchaRecognizer:
         xmin_arr = np.array([s[1].start for s in object_slices])
         sort_index = xmin_arr.argsort()
         char_images = []
-        # noinspection PyTypeChecker
-        for i in sort_index:
+        for i in list(sort_index):
             char_image = img_02.copy()
             char_image[labels != i + 1] = 0
             char_image = char_image[object_slices[i]]
@@ -155,7 +158,7 @@ class CaptchaRecognizer:
         # Type C: 0. Inside noise, or background.
         return new_img
 
-    def remove_noise_with_neighbors(self, img, neighbor_low=0, neighbor_high=7):
+    def remove_noise_with_neighbors(self, img, ):
         height, width = img.shape
         pad_shape = height + 2, width + 2
         img_pad_sum = np.zeros(pad_shape)
@@ -178,10 +181,13 @@ class CaptchaRecognizer:
         img_pad_a = img_pad_a[s]
         img_pad_b = img_pad_b[s]
         new_img = img.copy()
-        mask = np.logical_and(img == 0, img_pad_a + img_pad_b >= neighbor_high)
+        mask = np.logical_and(
+            img == 0,
+            img_pad_a + img_pad_b >= self.neighbor_high
+        )
         new_img[mask] = img_pad_sum[mask] / 8
-        new_img[img * 1.3 > img_pad_sum] = 0
-        new_img[img_pad_a <= neighbor_low] = 0
+        new_img[img * self.neighbor_ratio > img_pad_sum] = 0
+        new_img[img_pad_a <= self.neighbor_low] = 0
         return new_img
 
     def segment_with_label(self, img):

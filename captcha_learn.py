@@ -41,11 +41,11 @@ class LogisticRegression(object):
     determine a class membership probability.
     """
 
-    def __init__(self, input, n_in, n_out):
+    def __init__(self, input_, n_in, n_out):
         """ Initialize the parameters of the logistic regression
 
-        :type input: theano.tensor.TensorType
-        :param input: symbolic variable that describes the input of the
+        :type input_: theano.tensor.TensorType
+        :param input_: symbolic variable that describes the input of the
                       architecture (one minibatch)
 
         :type n_in: int
@@ -84,7 +84,7 @@ class LogisticRegression(object):
         # x is a matrix where row-j  represents input training sample-j
         # b is a vector where element-k represent the free parameter of
         # hyperplane-k
-        self.p_y_given_x = T.nnet.softmax(T.dot(input, self.W) + self.b)
+        self.p_y_given_x = T.nnet.softmax(T.dot(input_, self.W) + self.b)
 
         # symbolic description of how to compute prediction as class whose
         # probability is maximal
@@ -94,7 +94,7 @@ class LogisticRegression(object):
         self.params = [self.W, self.b]
 
         # keep track of model input
-        self.input = input
+        self.input = input_
 
     def negative_log_likelihood(self, y):
         """Return the mean of the negative log-likelihood of the prediction
@@ -157,7 +157,7 @@ class LogisticRegression(object):
 
 
 class HiddenLayer(object):
-    def __init__(self, rng, input, n_in, n_out, W=None, b=None,
+    def __init__(self, rng, input_, n_in, n_out, W=None, b=None,
                  activation=T.tanh):
         """
         Typical hidden layer of a MLP: units are fully-connected and have
@@ -171,8 +171,8 @@ class HiddenLayer(object):
         :type rng: numpy.random.RandomState
         :param rng: a random number generator used to initialize weights
 
-        :type input: theano.tensor.dmatrix
-        :param input: a symbolic tensor of shape (n_examples, n_in)
+        :type input_: theano.tensor.dmatrix
+        :param input_: a symbolic tensor of shape (n_examples, n_in)
 
         :type n_in: int
         :param n_in: dimensionality of input
@@ -184,7 +184,7 @@ class HiddenLayer(object):
         :param activation: Non linearity to be applied in the hidden
                            layer
         """
-        self.input = input
+        self.input = input_
 
         # `W` is initialized with `W_values` which is uniformly sampled
         # from sqrt(-6./(n_in+n_hidden)) and sqrt(6./(n_in+n_hidden))
@@ -220,7 +220,7 @@ class HiddenLayer(object):
         self.W = W
         self.b = b
 
-        lin_output = T.dot(input, self.W) + self.b
+        lin_output = T.dot(input_, self.W) + self.b
         self.output = (
             lin_output if activation is None
             else activation(lin_output)
@@ -240,14 +240,14 @@ class MLP(object):
     class).
     """
 
-    def __init__(self, rng, input, n_in, n_hidden, n_out):
+    def __init__(self, rng, input_, n_in, n_hidden, n_out):
         """Initialize the parameters for the multilayer perceptron
 
         :type rng: numpy.random.RandomState
         :param rng: a random number generator used to initialize weights
 
-        :type input: theano.tensor.TensorType
-        :param input: symbolic variable that describes the input of the
+        :type input_: theano.tensor.TensorType
+        :param input_: symbolic variable that describes the input of the
         architecture (one minibatch)
 
         :type n_in: int
@@ -268,7 +268,7 @@ class MLP(object):
         # sigmoid or any other nonlinear function
         self.hiddenLayer = HiddenLayer(
             rng=rng,
-            input=input,
+            input_=input_,
             n_in=n_in,
             n_out=n_hidden,
             activation=T.tanh  # could be T.nnet.sigmoid
@@ -277,7 +277,7 @@ class MLP(object):
         # The logistic regression layer gets as input the hidden units
         # of the hidden layer
         self.logRegressionLayer = LogisticRegression(
-            input=self.hiddenLayer.output,
+            input_=self.hiddenLayer.output,
             n_in=n_hidden,
             n_out=n_out
         )
@@ -292,8 +292,8 @@ class MLP(object):
         # square of L2 norm ; one regularization option is to enforce
         # square of L2 norm to be small
         self.L2_sqr = (
-            (self.hiddenLayer.W ** 2).sum()
-            + (self.logRegressionLayer.W ** 2).sum()
+            T.sum(self.hiddenLayer.W ** 2)
+            + T.sum(self.logRegressionLayer.W ** 2)
         )
 
         # negative log likelihood of the MLP is given by the negative
@@ -310,7 +310,7 @@ class MLP(object):
         self.params = self.hiddenLayer.params + self.logRegressionLayer.params
 
         # keep track of model input
-        self.input = input
+        self.input = input_
 
 
 def _construct_mlp(datasets, learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001,
@@ -426,7 +426,7 @@ def _construct_mlp(datasets, learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001,
     # construct the MLP class
     classifier = MLP(
         rng=rng,
-        input=x,
+        input_=x,
         n_in=_std_height * _std_width,
         n_hidden=n_hidden,
         n_out=len(_captcha_provider.chars)
@@ -519,6 +519,7 @@ def _construct_mlp(datasets, learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001,
     while (epoch < n_epochs) and (not done_looping):
         epoch += 1
         for minibatch_index in range(n_train_batches):
+            # noinspection PyUnusedLocal
             minibatch_avg_cost = train_model(minibatch_index)
             iteration = (epoch - 1) * n_train_batches + minibatch_index
 
@@ -541,8 +542,8 @@ def _construct_mlp(datasets, learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001,
                 # if we got the best validation score until now
                 if this_validation_loss < best_validation_loss:
                     # improve patience if loss improvement is good enough
-                    if (this_validation_loss <
-                                best_validation_loss * improvement_threshold):
+                    if (this_validation_loss
+                            < best_validation_loss * improvement_threshold):
                         patience = max(patience, iteration * patience_increase)
 
                     best_validation_loss = this_validation_loss
@@ -555,9 +556,8 @@ def _construct_mlp(datasets, learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001,
 
                     print(
                         '    epoch {0}, minibatch {1}/{2}, test error of best '
-                        'model {3}'.format(
-                            epoch, minibatch_index + 1, n_train_batches,
-                                   test_score * 100))
+                        'model {3}'.format(epoch, minibatch_index + 1,
+                                           n_train_batches, test_score * 100))
 
             if patience <= iteration:
                 done_looping = True
@@ -602,10 +602,11 @@ def predict(img):
     return _captcha_provider.chars[predicted_values]
 
 
-def reconstruct_model():
+def reconstruct_model(dry_run=False):
     dataset = _load_data()
     classifier = _construct_mlp(dataset)
-    _update_classifier(classifier)
+    if not dry_run:
+        _update_classifier(classifier)
 
 
 def _load_classifier():
