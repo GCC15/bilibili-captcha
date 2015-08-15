@@ -1,5 +1,4 @@
 import pickle
-import os
 import time
 
 import numpy
@@ -18,7 +17,7 @@ _std_width = 15
 
 _captcha_provider = BilibiliCaptchaProvider()
 
-_best_model_path = os.path.join(c.get('dataset'), c.get('best_model.pkl'))
+_best_model_path = c.get('best_model.pkl')
 
 
 # TODO: show error rate for each character
@@ -612,7 +611,8 @@ def reconstruct_model():
 def _load_classifier():
     try:
         return pickle.load(open(_best_model_path, 'rb'))
-    except:
+    except Exception as e:
+        print(e)
         reconstruct_model()
         return pickle.load(open(_best_model_path, 'rb'))
 

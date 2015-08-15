@@ -26,6 +26,8 @@ c.make_dirs(_training_set_dir)
 c.make_dirs(_training_char_dir)
 c.make_dirs(_test_set_dir)
 
+with open(os.path.join(c.get('dataset'), c.get('fail_char.txt'))) as f:
+    _fail_char_set = set(f.read().splitlines())
 
 _PARTITION_JSON = os.path.join(_dataset_dir, 'partition.json')
 _NUM_TOTAL = '###total'
@@ -130,8 +132,9 @@ def _get_image(directory, filename, mode='rgb'):
 
 # Get some images from a directory
 # set num = 0 or None to get all
-def _get_images(directory, num=None, mode='rgb', return_basename=False):
-    filenames = _list_png(directory)
+def _get_images(directory, num=None, mode='rgb',
+                return_basename=False, filename_filter=None):
+    filenames = list(filter(filename_filter,  _list_png(directory)))
     if num:
         if num > len(filenames):
             num = len(filenames)
@@ -184,7 +187,14 @@ def get_training_images(num=None):
 
 
 def get_training_char_images(char, num=None):
-    return _get_images(_get_training_char_dir(char), num, mode='gray')
+    def filename_filter(filename):
+        return _remove_suffix(filename) not in _fail_char_set
+    return _get_images(
+        _get_training_char_dir(char),
+        num,
+        mode='gray',
+        filename_filter=filename_filter
+    )
 
 
 # List all png files in a directory
@@ -308,3 +318,4 @@ def tune_partition_parameter():
     print(rate.max())
     np.save(os.path.join(_dataset_dir, 'gridsearch.npy'), rate)
     return rate
+

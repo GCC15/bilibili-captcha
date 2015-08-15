@@ -13,10 +13,11 @@ import captcha_learn
 
 def main():
     pass
+    # dataset_manager.fetch_training_set(50)
     # test_recognize_training()
     # captcha_learn.reconstruct_model()
     # test_recognize_http()
-    # test_recognize_http(False, 50, True)
+    test_recognize_http(num=100)
     # dataset_manager.get_training_images(1)
     # dataset_manager.partition_training_images_to_chars()
     # dataset_manager.partition_training_images_to_chars(force_update=True,
