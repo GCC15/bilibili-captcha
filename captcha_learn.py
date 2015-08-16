@@ -145,18 +145,6 @@ class LogisticRegression(object):
         else:
             raise NotImplementedError()
 
-            # def getComparison(self, y):
-            #     # TODO: print out prediction and target
-            #     print("Predict: ")
-            #     print(
-            #         self.y_pred)  # needs to be modified to see our actual
-            # prediction
-            #     #  instead of "argmax"
-            #     print("Actual: ")
-            #     print(y.eval())  # seems to be correct but produce weird
-            # result
-            #     # (y should be a vector, and shouldn't be 20 ALL THE TIME)
-
 
 class HiddenLayer(object):
     def __init__(self, rng, input_, n_in, n_out, W=None, b=None,
@@ -359,7 +347,7 @@ def _construct_mlp(datasets, learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001,
 
     # stratified k-fold to split test and temporary train, which contains
     # validation and train
-    skf = StratifiedShuffleSplit(targets, 1, 0.2, random_state=0)
+    skf = StratifiedShuffleSplit(targets, 1, 0.2)
     for temp_train_index, test_index in skf:
         # print("TEMP_TRAIN:", temp_train_index, "TEST:", test_index)
         temp_train_set_x.append(inputs[temp_train_index])
@@ -374,7 +362,7 @@ def _construct_mlp(datasets, learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001,
     temp_train_set_y = temp_train_set_y[0]
 
     # stratified k-fold to split valid and train
-    skf = StratifiedShuffleSplit(temp_train_set_y, 1, 0.25, random_state=0)
+    skf = StratifiedShuffleSplit(temp_train_set_y, 1, 0.25)
     for train_index, valid_index in skf:
         # print("TRAIN: ", train_index, ", VALID: ", valid_index)
         train_set_x.append(temp_train_set_x[train_index])
@@ -539,8 +527,6 @@ def _construct_mlp(datasets, learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001,
                         this_validation_loss * 100.
                     )
                 )
-                # classifier.logRegressionLayer.getComparison(valid_set_y[
-                # minibatch_index])
                 # if we got the best validation score until now
                 if this_validation_loss < best_validation_loss:
                     # improve patience if loss improvement is good enough
