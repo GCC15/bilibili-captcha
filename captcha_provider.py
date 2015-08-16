@@ -1,3 +1,5 @@
+# Handle captcha fetching and providing
+
 from abc import ABCMeta, abstractmethod
 from io import BytesIO
 import random

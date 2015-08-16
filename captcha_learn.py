@@ -1,3 +1,5 @@
+# Building a multilayer perceptron (MLP) model to learn to recognize captcha
+
 import pickle
 import time
 
