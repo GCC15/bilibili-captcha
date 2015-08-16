@@ -13,11 +13,11 @@ import captcha_learn
 
 def main():
     pass
+    # test_recognize_training()
     # dataset_manager.fetch_training_set(50)
     # test_recognize_training()
     # captcha_learn.reconstruct_model()
-    test_recognize_http()
-    # test_recognize_http(num=100)
+    test_recognize_http(num=30)
     # dataset_manager.get_training_images(1)
     # dataset_manager.partition_training_images_to_chars()
     # dataset_manager.partition_training_images_to_chars(force_update=True,
@@ -27,18 +27,7 @@ def main():
 
 def test_recognize_training():
     c.clear_temp()
-    seq = None
-
-    # Below are sample training images that are partitioned falsely
-    # seq = 'YFF5M'
-    # seq = 'W1PM4'
-    # seq = 'W1R4R'
-    # seq = 'YTM6X'
-    # seq = 'W9WU4'
-    # seq = 'EFTWY'
-    # seq = '5WTGP'
-    # seq = '113W2'
-    # seq = 'UWFG1'
+    seq = '1HMLX'
 
     # Sticking together
     # seq = 'WMQPQ'
@@ -60,20 +49,28 @@ def test_recognize_training():
         image = dataset_manager.get_training_image(seq)
     else:
         seq, image = dataset_manager.get_training_image()
-    success, seq_r = CaptchaRecognizer().recognize(image, verbose=True,
-                                                   save_intermediate=True)
+    success, seq_r, weak_confidence = CaptchaRecognizer().recognize(image,
+                                                                    verbose=True,
+                                                                    save_intermediate=True,
+                                                                    force_partition=True)
     if success:
+        if weak_confidence:
+            print('Weak confidence')
+        print('Recognized is', seq_r)
+        print('Actual is', seq)
         print('Result: {}'.format(seq == seq_r))
-        # image = dataset_manager.get_test_image(seq)
 
 
-def test_recognize_http(show_img=False, num=1, reconstruct=False):
+def test_recognize_http(show_img=False, num=1, reconstruct=False,
+                        force_partition=True):
     time_start = time.time()
     provider = BilibiliCaptchaProvider()
     recognizer = CaptchaRecognizer()
     fail = 0
-    right = 0
-    wrong = 0
+    right_strong = 0
+    right_weak = 0
+    wrong_strong = 0
+    wrong_weak = 0
     for i in range(num):
         image = time_func(
             'fetch' if num == 1 else None,
@@ -82,21 +79,24 @@ def test_recognize_http(show_img=False, num=1, reconstruct=False):
         if show_img and num == 1:
             show_image(image)
         if num == 1:
-            success, seq = recognizer.recognize(image,
-                                                save_intermediate=True,
-                                                verbose=True,
-                                                reconstruct=reconstruct)
+            success, seq, weak_confidence = recognizer.recognize(image,
+                                                                 save_intermediate=True,
+                                                                 verbose=True,
+                                                                 reconstruct=reconstruct,
+                                                                 force_partition=force_partition)
         else:
             if i == 0:
-                success, seq = recognizer.recognize(image,
-                                                    save_intermediate=False,
-                                                    verbose=False,
-                                                    reconstruct=reconstruct)
+                success, seq, weak_confidence = recognizer.recognize(image,
+                                                                     save_intermediate=False,
+                                                                     verbose=False,
+                                                                     reconstruct=reconstruct,
+                                                                     force_partition=force_partition)
             else:
-                success, seq = recognizer.recognize(image,
-                                                    save_intermediate=False,
-                                                    verbose=False,
-                                                    reconstruct=False)
+                success, seq, weak_confidence = recognizer.recognize(image,
+                                                                     save_intermediate=False,
+                                                                     verbose=False,
+                                                                     reconstruct=False,
+                                                                     force_partition=force_partition)
         if success:
             print(seq)
             result = time_func(
@@ -104,19 +104,39 @@ def test_recognize_http(show_img=False, num=1, reconstruct=False):
                 lambda: provider.verify(seq)
             )
             if num == 1:
-                print('Recognized seq is {}'.format(result))
+                print('Recognized seq is {}'.format())
             if result:
-                right += 1
+                if weak_confidence:
+                    right_weak += 1
+                else:
+                    right_strong += 1
             else:
-                wrong += 1
+                if weak_confidence:
+                    wrong_weak += 1
+                else:
+                    wrong_strong += 1
         else:
             fail += 1
+    right_total = right_strong + right_weak
+    wrong_total = wrong_strong + wrong_weak
     print('Fail: ', fail)
-    print('Right: ', right)
-    print('Wrong: ', wrong)
-    print('Total success rate: ', right / num)
+    print('Right weak: ', right_weak)
+    print('Right strong: ', right_strong)
+    print('Right total: ', right_total)
+    print('Wrong weak: ', wrong_weak)
+    print('Wrong strong: ', wrong_strong)
+    print('Wrong total: ', wrong_total)
+    print('Total success rate: ', (right_weak + right_strong) / num)
     print('Success rate when confident: ',
-          right / (right + wrong) if right + wrong > 0 else 0)
+          (right_strong + right_weak) / (num - fail) if num - fail > 0 else 0)
+    print('Success rate when strongly confident: ',
+          right_strong / (
+              right_strong + wrong_strong) if right_strong + wrong_strong > 0
+          else 0)
+    print('Success rate when weakly confident: ',
+          right_weak / (
+              right_weak + wrong_weak) if right_weak + wrong_weak > 0
+          else 0)
     time_end = time.time()
     print('Time used to test recognize http is: ', time_end - time_start)
 

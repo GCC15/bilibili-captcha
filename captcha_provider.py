@@ -44,7 +44,7 @@ class HttpCaptchaProvider:
                 )
                 break
             except Exception as e:
-                print('Exception occurs when fetching captcha', e)
+                print('An exception occurs when fetching captcha', e)
         return None if r is None else mpimg.imread(BytesIO(r.content))
 
     def verify(self, seq):

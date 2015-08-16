@@ -35,12 +35,14 @@ class CaptchaRecognizer:
         self.char_height_max = 30
 
     # Try to partition a CAPTCHA into each char image
-    # TODO: Forced partition
-    def partition(self, img, save_intermediate=False, verbose=False):
+    def partition(self, img, save_intermediate=False, verbose=False,
+                  force_partition=True):
+        weak_confidence = 0
         if save_intermediate:
             mpimg.imsave(c.temp_path('00.origin.png'), img)
 
         # step 1
+        # remove noise with hsv
         img_01 = time_func(
             'remove_noise_with_hsv' if verbose else None,
             lambda: self.remove_noise_with_hsv(img)
@@ -49,6 +51,7 @@ class CaptchaRecognizer:
             mpimg.imsave(c.temp_path('01.hsv.png'), img_01, cmap=cm_greys)
 
         # step 2
+        # remove noise with neighbors
         img_02 = time_func(
             'remove_noise_with_neighbors' if verbose else None,
             lambda: repeat(self.remove_noise_with_neighbors, 2)(img_01)
@@ -57,6 +60,7 @@ class CaptchaRecognizer:
             mpimg.imsave(c.temp_path('02.neighbor.png'), img_02, cmap=cm_greys)
 
         # step 3
+        # partition stage 1
         labels, object_slices = time_func(
             'segment_with_label' if verbose else None,
             lambda: self.segment_with_label(img_02)
@@ -67,8 +71,7 @@ class CaptchaRecognizer:
             mpimg.imsave(c.temp_path('03.00000.png'), labels)
 
         # step 4
-
-        # Arrange the segments from left to right
+        # Arrange the segments from left to right and probably partition stage 2
         xmin_arr = np.array([s[1].start for s in object_slices])
         sort_index = xmin_arr.argsort()
         char_images = []
@@ -77,8 +80,12 @@ class CaptchaRecognizer:
             char_image[labels != i + 1] = 0
             char_image = char_image[object_slices[i]]
             char_images.append(char_image)
+        if force_partition and len(char_images) == self.character_num - 1:
+            weak_confidence = 1
+            char_images = self.force_partition(char_images)
 
-        # Check if segmentation was successful
+        # step 5
+        # Check if segmentation was successful and get characters
         if len(char_images) == self.character_num:
             shapes = np.array(list(map(np.shape, char_images)))
             heights, widths = shapes[:, 0], shapes[:, 1]
@@ -96,16 +103,18 @@ class CaptchaRecognizer:
                         mpimg.imsave(
                             c.temp_path('03.char.{}.png'.format(i + 1)),
                             char_images[i], cmap=cm_greys)
-                return char_images
+                return char_images, weak_confidence
+
         if verbose:
             print('Warning: partition failed!')
-        return None
+        return None, weak_confidence
 
     # Recognize the captcha
     def recognize(self, img, save_intermediate=False, verbose=False,
-                  reconstruct=False):
+                  reconstruct=False, force_partition=True):
         seq = []
-        char_images = self.partition(img, save_intermediate, verbose)
+        char_images, weak_confidence = self.partition(img, save_intermediate,
+                                                      verbose,force_partition)
         if reconstruct:
             captcha_learn.reconstruct_model()
         if char_images is not None and len(char_images) == self.character_num:
@@ -120,7 +129,7 @@ class CaptchaRecognizer:
             seq = ''.join(seq)
         else:
             success = False
-        return success, seq
+        return success, seq, weak_confidence
 
     # Convert to a grayscale image using HSV
     def remove_noise_with_hsv(self, img):
@@ -158,6 +167,7 @@ class CaptchaRecognizer:
         # Type C: 0. Inside noise, or background.
         return new_img
 
+    # Adding and removing pixels on a grayscale image
     def remove_noise_with_neighbors(self, img, ):
         height, width = img.shape
         pad_shape = height + 2, width + 2
@@ -190,6 +200,7 @@ class CaptchaRecognizer:
         new_img[img_pad_a <= self.neighbor_low] = 0
         return new_img
 
+    # segment a grayscale image with labels
     def segment_with_label(self, img):
         # Next-nearest neighbors
         struct_nnn = np.ones((3, 3), dtype=int)
@@ -197,3 +208,22 @@ class CaptchaRecognizer:
         # np.savetxt(c.temp_path('labels.txt'), labels, fmt='%d')
         object_slices = ndimage.find_objects(labels)
         return labels, object_slices
+
+    # force a image that is separated into four parts to be further separated
+    def force_partition(self, char_images):
+        widths = []
+        for image in char_images:
+            widths.append(image.shape[1])
+        # The part with the largest width needs to be separate further
+        target_index = np.argsort(widths)[-1]
+        target_img = char_images[target_index]
+        del char_images[target_index]
+        width = target_img.shape[1]
+        if width % 2 == 1:
+            char_images.insert(target_index, target_img[:, 0:(width + 1) / 2])
+            char_images.insert(target_index + 1,
+                               target_img[:, (width - 1) / 2:])
+        else:
+            char_images.insert(target_index, target_img[:, 0:width / 2 + 1])
+            char_images.insert(target_index + 1, target_img[:, width / 2 - 1:])
+        return char_images

@@ -243,7 +243,7 @@ def partition_training_images_to_chars(captcha_recognizer=CaptchaRecognizer(),
         if save:
             print('{}/{}: {}'.format(n, num_update, seq))
         img = get_training_image(seq)
-        char_images = recognizer.partition(img)
+        char_images, _ = recognizer.partition(img,force_partition=False)
         # If successful
         if char_images is not None:
             json_dict[_SUCCESS].append(seq)
@@ -299,9 +299,9 @@ def partition_training_images_to_chars(captcha_recognizer=CaptchaRecognizer(),
 # Tune the parameter by grid search
 # The best parameter combination now is (6,36,40)
 def tune_partition_parameter():
-    h_tol = [6]
-    s_tol = [36]
-    v_tol = [40]
+    h_tol = np.arange(4,8)
+    s_tol = np.arange(30,50,4)
+    v_tol = np.arange(50,70,4)
     rate = np.zeros((len(h_tol), len(s_tol), len(v_tol)))
     for h in h_tol:
         for s in s_tol:
@@ -310,7 +310,7 @@ def tune_partition_parameter():
                                                s / 100,
                                                v / 100)
                 rate[
-                    h - 6, s - 36, v - 40] = \
+                    h - 4, (s - 30)/4, (v - 50)/4] = \
                     partition_training_images_to_chars(recognizer,
                                                        force_update=True,
                                                        save=False)
