@@ -17,7 +17,7 @@ def main():
     # dataset_manager.fetch_training_set(50)
     # test_recognize_training()
     # captcha_learn.reconstruct_model()
-    test_recognize_http(num=30)
+    # test_recognize_http(num=30)
     # dataset_manager.get_training_images(1)
     # dataset_manager.partition_training_images_to_chars()
     # dataset_manager.partition_training_images_to_chars(force_update=True,
@@ -27,7 +27,8 @@ def main():
 
 def test_recognize_training():
     c.clear_temp()
-    seq = '1HMLX'
+    # seq = 'JWP26'
+    # seq = 'K464J'
 
     # Sticking together
     # seq = 'WMQPQ'

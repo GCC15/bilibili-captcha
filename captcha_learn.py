@@ -21,8 +21,6 @@ _captcha_provider = BilibiliCaptchaProvider()
 
 _best_model_path = c.get('best_model.pkl')
 
-
-# TODO: show error rate for each character
 # TODO: Parameters need tuning
 
 # Reference:
@@ -261,7 +259,7 @@ class MLP(object):
             input_=input_,
             n_in=n_in,
             n_out=n_hidden,
-            activation=T.tanh  # could be T.nnet.sigmoid
+            activation=T.tanh  # could be T.nnet.sigmoid or T.tanh
         )
 
         # The logistic regression layer gets as input the hidden units
