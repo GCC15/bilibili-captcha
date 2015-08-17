@@ -105,7 +105,7 @@ def test_recognize_http(show_img=False, num=1, reconstruct=False,
                 lambda: provider.verify(seq)
             )
             if num == 1:
-                print('Recognized seq is {}'.format())
+                print('Recognized seq is {}'.format(result))
             if result:
                 if weak_confidence:
                     right_weak += 1
