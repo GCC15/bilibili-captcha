@@ -27,7 +27,7 @@ def main():
 
 def test_recognize_training():
     c.clear_temp()
-    # seq = 'JWP26'
+    seq = 'JWP26'
     # seq = 'K464J'
 
     # Sticking together
