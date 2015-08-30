@@ -46,6 +46,7 @@ particular captcha source (derived class of HttpCaptchaProvider). The steps that
 After this step the remaining image is a greyscale image with slight nosie.
 2. Segmentation
 Components are found using the next-nearest-neightbor.
+
 After this step the image is partioned into a number of "characters"."
 3. Recognition
 If the partitioned characters is as desired, each is recognized using the model in captcha_learn.py.
@@ -77,8 +78,9 @@ Suppose we want to recognize a bilibili captcha image called img (the return of 
     recognizer = CaptchaRecognizer()
     success, seq, weak_confidence = recognizer.recognize(img, save_intermediate=True, verbose=True,reconstruct=False, force_partition=False)
 
-success is a boolean veriab indicating whether the recognition is successful, and seq is the recognized sequence if the recognition is successful.
 Here the parameter save_intermediate controls whether intermediate materials are saved, if set to true, we can find those materials under /temp. The parameter verbose controls whether additional information like timing are printed out. The paramter reconstruct controls whether we need to recontruct the learning model. The force_partiton controls whether the recognizer recognize those images that are partitioned into four pieces. This parameter is designed to be used in case that we want to maximize our chance of success when we cannot overlook the number of times the partition fails. However, in real world situations, it is usually the case that we can regenerate captcha as many times as we want so we do not have to worried about the number of times the partition fails.
+
+For the return value, success is a boolean variable indicating whether the recognition is successful. Seq is the recognized sequence if the recognition is successful. Weak_confidence is a boolean variable that indicates whether we are only weakly confident about the partition which is not relevant here because the variable force_partition is set to be false
 
 Now suppose we want to test whether a captcha fetched from bilibili.com is correct for n times, we can
 
@@ -93,12 +95,13 @@ Now suppose we want to test whether a captcha fetched from bilibili.com is corre
 
     test_recognize_http(num=n)
 
-     
+For an explanation of output, see section "Benchmark" below.   
 
 
 ## Benchmark
 
-The function test_recognize_http which tests recognizing the captcha from bilibili.com is run 1000 times on Amazon Elastic Compute Cloud and the result is as follows:
+The function test_recognize_http which tests recognizing the captcha from bilibili.com is run 1000 times 
+(test_recognize_http(num=1000)) on Amazon Elastic Compute Cloud and the result is as follows:
 
 Fail:  233
 
