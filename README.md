@@ -1,5 +1,4 @@
 # bilibili-captcha
-===============================
 
 ## Overview
 
@@ -40,7 +39,9 @@ This module is designed to recognize the images (the return of imread function i
 particular captcha source (derived class of HttpCaptchaProvider). The steps that an image is recognized are
 
 1. Noise reduction 
+
   1.1 Noise reduction by hsv
+
   1.2 Noise reduction by neighbors
 After this step the remaining image is a greyscale image with slight nosie.
 2. Segmentation
@@ -54,16 +55,47 @@ captcha_learn.py:
 
 This module is designed to use a multilayer perceptron (MLP) model to learn to recognize individual captcha character.
 The input layer consists of 300 neurons, which is the result of flattening the standard 20 by 15 captcha character image.
-There is only one hidden layer, and it consists of 200 hidden neurons. The output layer consists of 26 neurons, each
-corresponding to one possible outcome (EFGH JKLMN PQR TUVWXY  123456 89). The activation function used is tanh. There is
-already a model with tuned parameters, an it is saved in best_model.pkl. If you want to reconstruct the model, call
-reconstruct_model method. If you want to make prediction, call predict method.
+There is only one hidden layer, and it consists of 200 hidden neurons. The output layer consists of 26 neurons, each corresponding to one possible outcome (EFGH JKLMN PQR TUVWXY  123456 89). The activation function used is tanh. 
+There is already a model with tuned parameters, and it is saved in best_model.pkl. If you want to reconstruct the model, call reconstruct_model method. If you want to make prediction, call predict method.
 
 ## Example
 
-Let's take a look of a few examples.
+Let's take a look at a few examples.
 
 ## Benchmark
+
+The program is run 1000 times and the result is as follows:
+
+Fail:  233
+
+Right weak:  78
+
+Right strong:  412
+
+Right total:  490
+
+Wrong weak:  260
+
+Wrong strong:  17
+
+Wrong total:  277
+
+Total success rate:  0.49
+
+Success rate when confident:  0.6388526727509778
+
+Success rate when strongly confident:  0.9603729603729604
+
+Success rate when weakly confident:  0.23076923076923078
+
+Time used to test recognize http is:  350.77492213249207
+
+According to the result, we see that the total success rate is 49%, which means that 490 out of 100 captcha are 
+recognized successfully. However, we notie that when we are strongly confident of the result, which means the 
+image is successfully partitioned into five characters, which is the length of the captcha generate by 
+bilibili.com, the success rate is approximately 96%, which is a vey high ratio. Therefore, in actual situations,
+where one probably would not care so much the total success rate because one could always ask to regenerate the 
+captcha if one is not strongly confident, the success rate would be nearly 100%.
 
 ## Related info
 
