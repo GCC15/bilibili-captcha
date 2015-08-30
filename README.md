@@ -62,9 +62,43 @@ There is already a model with tuned parameters, and it is saved in best_model.pk
 
 Let's take a look at a few examples.
 
+Suppose we want to recognize a bilibili captcha image called img (the return of imread in matplotlib.image), we can
+
+    import time
+
+    import config as c
+    import dataset_manager
+    from captcha_recognizer import CaptchaRecognizer
+    from captcha_provider import BilibiliCaptchaProvider
+    from helper import show_image, time_func
+    import captcha_learn
+    
+    provider = BilibiliCaptchaProvider()
+    recognizer = CaptchaRecognizer()
+    success, seq, weak_confidence = recognizer.recognize(img, save_intermediate=True, verbose=True,reconstruct=False, force_partition=False)
+
+success is a boolean veriab indicating whether the recognition is successful, and seq is the recognized sequence if the recognition is successful.
+Here the parameter save_intermediate controls whether intermediate materials are saved, if set to true, we can find those materials under /temp. The parameter verbose controls whether additional information like timing are printed out. The paramter reconstruct controls whether we need to recontruct the learning model. The force_partiton controls whether the recognizer recognize those images that are partitioned into four pieces. This parameter is designed to be used in case that we want to maximize our chance of success when we cannot overlook the number of times the partition fails. However, in real world situations, it is usually the case that we can regenerate captcha as many times as we want so we do not have to worried about the number of times the partition fails.
+
+Now suppose we want to test whether a captcha fetched from bilibili.com is correct for n times, we can
+
+    import time
+
+    import config as c
+    import dataset_manager
+    from captcha_recognizer import CaptchaRecognizer
+    from captcha_provider import BilibiliCaptchaProvider
+    from helper import show_image, time_func
+    import captcha_learn
+
+    test_recognize_http(num=n)
+
+     
+
+
 ## Benchmark
 
-The program is run 1000 times and the result is as follows:
+The function test_recognize_http which tests recognizing the captcha from bilibili.com is run 1000 times on Amazon Elastic Compute Cloud and the result is as follows:
 
 Fail:  233
 
@@ -90,10 +124,10 @@ Success rate when weakly confident:  0.23076923076923078
 
 Time used to test recognize http is:  350.77492213249207
 
-According to the result, we see that the total success rate is 49%, which means that 490 out of 100 captcha are 
+According to the result, we see that the total success rate is 49%, which means that 490 out of 1000 captchas are 
 recognized successfully. However, we notie that when we are strongly confident of the result, which means the 
-image is successfully partitioned into five characters, which is the length of the captcha generate by 
-bilibili.com, the success rate is approximately 96%, which is a vey high ratio. Therefore, in actual situations,
+image is successfully partitioned into five characters (the length of the captcha generate by 
+bilibili.com), the success rate is approximately 96%. Therefore, in actual situations,
 where one probably would not care so much the total success rate because one could always ask to regenerate the 
 captcha if one is not strongly confident, the success rate would be nearly 100%.
 
