@@ -52,7 +52,12 @@ If the partitioned characters is as desired, each is recognized using the model 
 
 captcha_learn.py:
 
-TODO
+This module is designed to use a multilayer perceptron (MLP) model to learn to recognize individual captcha character.
+The input layer consists of 300 neurons, which is the result of flattening the standard 20 by 15 captcha character image.
+There is only one hidden layer, and it consists of 200 hidden neurons. The output layer consists of 26 neurons, each
+corresponding to one possible outcome (EFGH JKLMN PQR TUVWXY  123456 89). The activation function used is tanh. There is
+already a model with tuned parameters, an it is saved in best_model.pkl. If you want to reconstruct the model, call
+reconstruct_model method. If you want to make prediction, call predict method.
 
 ## Example
 

@@ -21,8 +21,6 @@ _captcha_provider = BilibiliCaptchaProvider()
 
 _best_model_path = c.get('best_model.pkl')
 
-# TODO: Parameters need tuning
-
 # Reference:
 # http://deeplearning.net/tutorial/logreg.html
 # http://deeplearning.net/tutorial/mlp.html
