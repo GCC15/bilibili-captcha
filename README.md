@@ -4,22 +4,13 @@ The Python program attempts to recognize [CAPTCHA images](http://www.bilibili.co
 
 # Dependencies
 
-<<<<<<< HEAD
-- numpy (http://www.numpy.org)
-- matplotlib (http://matplotlib.org)
-- scipy (http://www.scipy.org)
-- requests (http://www.python-requests.org/en/latest)
-- theano (http://deeplearning.net/software/theano)
-- scikit-learn (http://scikit-learn.org/stable)
-=======
-- matplotlib
-- numpy 
-- pillow
-- requests
-- scikit-learn
-- scipy 
-- theano
->>>>>>> origin/master
+- [matplotlib](http://matplotlib.org)
+- [numpy](http://www.numpy.org)
+- [pillow](https://python-pillow.github.io/)
+- [requests](http://www.python-requests.org/en/latest)
+- [scikit-learn](http://scikit-learn.org/stable)
+- [scipy](http://www.scipy.org)
+- [theano](http://deeplearning.net/software/theano)
 
 # Usage
 
