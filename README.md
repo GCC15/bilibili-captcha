@@ -26,9 +26,9 @@ Clone all the files and put them under the same directory as your program, inclu
 
 captcha_provider.py:
 
-This module is designed to represent the source of the captcha. An abstract base class (HttpCaptchaProvider) is 
-defined to represent abstract captcha providers and a derived class (BilibiliCaptchaProvider) is defined to 
-represent the specific captcha source we are attempting to recognize. If you want to define other captcha 
+This module is designed to represent the source of the CAPTCHA. An abstract base class (HttpCaptchaProvider) is 
+defined to represent abstract CAPTCHA providers and a derived class (BilibiliCaptchaProvider) is defined to 
+represent the specific CAPTCHA source we are attempting to recognize. If you want to define other CAPTCHA 
 sources, you can define another class that inherits the abstract base class. Two methods thar must be
 overridden are _get_data_from_seq and _is_correct_response. They represent getting the data that needs to be
 submitted as part of the request to verify and checking whether the recognized sequence is true, respectively.
@@ -36,7 +36,7 @@ submitted as part of the request to verify and checking whether the recognized s
 captcha_recognizer.py:
 
 This module is designed to recognize the images (the return of imread function in matplotlib.image) from a 
-particular captcha source (derived class of HttpCaptchaProvider). The steps to recognize an image are
+particular CAPTCHA source (derived class of HttpCaptchaProvider). The steps to recognize an image are
 
 1. Noise reduction 
 
@@ -57,8 +57,8 @@ If the partitioned characters is as desired, each is recognized using the model 
 
 captcha_learn.py:
 
-This module is designed to use a multilayer perceptron (MLP) model to learn to recognize individual captcha character.
-The input layer consists of 300 neurons, which is the result of flattening the standard 20 by 15 captcha character image.
+This module is designed to use a multilayer perceptron (MLP) model to learn to recognize individual CAPTCHA character.
+The input layer consists of 300 neurons, which is the result of flattening the standard 20 by 15 CAPTCHA character image.
 There is only one hidden layer, and it consists of 200 hidden neurons.
 The output layer consists of 26 neurons, each corresponding to one possible outcome (EFGH JKLMN PQR TUVWXY  123456 89).
 The activation function used is tanh.
@@ -70,7 +70,7 @@ If you want to make prediction, call predict method.
 
 Let's take a look at a few examples.
 
-Suppose we want to recognize a bilibili captcha image called img (the return of imread in matplotlib.image), we can
+Suppose we want to recognize a bilibili CAPTCHA image called img (the return of imread in matplotlib.image), we can
 
     import time
 
@@ -93,7 +93,7 @@ The parameter reconstruct controls whether we need to reconstruct the learning m
 The force_partition controls whether the recognizer recognizes those images that are partitioned into four pieces.
 This parameter is designed to be used in case under which we want to maximize our chance of success when we cannot
 overlook the number of times the partition fails. However, in real world situations,
-it is usually the case that we can regenerate captcha as many times as we want so we do not have to worry about the number of times the partition fails.
+it is usually the case that we can regenerate CAPTCHA as many times as we want so we do not have to worry about the number of times the partition fails.
 
 For the return values,
 success is a boolean variable indicating whether the recognition is successful.
@@ -101,7 +101,7 @@ Seq is the recognized sequence if the recognition is successful.
 Weak_confidence is a boolean variable indicating whether we are only weakly confident about the partition.
 It is not relevant here because the variable force_partition is set to be false.
 
-Now suppose we want to test whether a captcha fetched from bilibili.com is correct for n times, we can
+Now suppose we want to test whether a CAPTCHA fetched from bilibili.com is correct for n times, we can
 
     import time
 
@@ -119,7 +119,7 @@ For an explanation of output, see section "Benchmark" below.
 
 ## Benchmark
 
-The function test_recognize_http which tests recognizing the captcha characters from bilibili.com is run 1000 times
+The function test_recognize_http which tests recognizing the CAPTCHA characters from bilibili.com is run 1000 times
 (test_recognize_http(num=1000)) on Amazon Elastic Compute Cloud and the result is as follows:
 
 Fail:  233
@@ -146,11 +146,11 @@ Success rate when weakly confident:  0.23076923076923078
 
 Time used to test recognize http is:  350.77492213249207
 
-According to the result, we can see that the total success rate is 49%, which means that 490 out of 1000 captchas are
+According to the result, we can see that the total success rate is 49%, which means that 490 out of 1000 CAPTCHAs are
 recognized successfully. However, we also notice that when the model is strongly confident of the result, which means the
-image is successfully partitioned into five characters (the length of the captcha generate by bilibili.com),
+image is successfully partitioned into five characters (the length of the CAPTCHA generate by bilibili.com),
 the success rate is approximately 96%. Therefore, in actual situations, one probably would not care so much about
-the total success rate, because one could always ask to regenerate the captcha if not strongly confident,
+the total success rate, because one could always ask to regenerate the CAPTCHA if not strongly confident,
 and thus the success rate would be nearly 100%.
 
 ## Related info
