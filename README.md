@@ -90,16 +90,16 @@ success, seq, weak_confidence = recognizer.recognize(img, save_intermediate=True
 For the parameters,
 the parameter `save_intermediate` controls whether intermediate materials are saved.
 If set to true, we can find those materials under `/temp`.
-The parameter verbose controls whether additional information like timing is printed out.
-The parameter reconstruct controls whether we need to reconstruct the learning model.
-The `force_partition` controls whether the recognizer recognizes those images that are partitioned into four pieces.
+The parameter `verbose` controls whether additional information like timing is printed out.
+The parameter `reconstruct` controls whether we need to reconstruct the learning model.
+The parameter `force_partition` controls whether the recognizer recognizes those images that are partitioned into four pieces.
 This parameter is designed to be used in case under which we want to maximize our chance of success when we cannot
 overlook the number of times the partition fails. However, in real world situations,
 it is usually the case that we can regenerate CAPTCHA as many times as we want so we do not have to worry about the number of times the partition fails.
 
 For the return values,
-success is a boolean variable indicating whether the recognition is successful.
-Seq is the recognized sequence if the recognition is successful.
+`success` is a boolean variable indicating whether the recognition is successful.
+`Seq` is the recognized sequence if the recognition is successful.
 `weak_confidence` is a boolean variable indicating whether we are only weakly confident about the partition.
 It is not relevant here because the variable force_partition is set to be false.
 
@@ -144,9 +144,9 @@ Time used to test recognize http is:  350.77492213249207
 According to the result, we can see that the total success rate is 49%, which means that 490 out of 1000 CAPTCHAs are
 recognized successfully. However, we also notice that when the model is strongly confident of the result, which means the
 image is successfully partitioned into five characters (the length of the CAPTCHA generate by bilibili.com),
-the success rate is approximately 96%. Therefore, in actual situations, one probably would not care so much about
-the total success rate, because one could always ask to regenerate the CAPTCHA if not strongly confident,
-and thus the success rate would be nearly 100%.
+the success rate is approximately 96%. Therefore, in actual situations where one probably would not care so much about
+the total success rate because one could always ask to regenerate the CAPTCHA if not strongly confident,
+the success rate would be nearly 100%.
 
 ## Related Info
 
