@@ -72,18 +72,20 @@ Let's take a look at a few examples.
 
 Suppose we want to recognize a bilibili CAPTCHA image called img (the return of imread in matplotlib.image), we can
 
-    import time
+```python
+import time
 
-    import config as c
-    import dataset_manager
-    from captcha_recognizer import CaptchaRecognizer
-    from captcha_provider import BilibiliCaptchaProvider
-    from helper import show_image, time_func
-    import captcha_learn
-    
-    provider = BilibiliCaptchaProvider()
-    recognizer = CaptchaRecognizer()
-    success, seq, weak_confidence = recognizer.recognize(img, save_intermediate=True, verbose=True,reconstruct=False, force_partition=False)
+import config as c
+import dataset_manager
+from captcha_recognizer import CaptchaRecognizer
+from captcha_provider import BilibiliCaptchaProvider
+from helper import show_image, time_func
+import captcha_learn
+
+provider = BilibiliCaptchaProvider()
+recognizer = CaptchaRecognizer()
+success, seq, weak_confidence = recognizer.recognize(img, save_intermediate=True, verbose=True,reconstruct=False, force_partition=False)
+```
 
 For the parameters,
 the parameter save_intermediate controls whether intermediate materials are saved.
@@ -103,16 +105,18 @@ It is not relevant here because the variable force_partition is set to be false.
 
 Now suppose we want to test whether a CAPTCHA fetched from bilibili.com is correct for n times, we can
 
-    import time
+```python
+import time
 
-    import config as c
-    import dataset_manager
-    from captcha_recognizer import CaptchaRecognizer
-    from captcha_provider import BilibiliCaptchaProvider
-    from helper import show_image, time_func
-    import captcha_learn
+import config as c
+import dataset_manager
+from captcha_recognizer import CaptchaRecognizer
+from captcha_provider import BilibiliCaptchaProvider
+from helper import show_image, time_func
+import captcha_learn
 
-    test_recognize_http(num=n)
+test_recognize_http(num=n)
+```
 
 For an explanation of output, see section "Benchmark" below.   
 
@@ -122,29 +126,20 @@ For an explanation of output, see section "Benchmark" below.
 The function test_recognize_http which tests recognizing the CAPTCHA characters from bilibili.com is run 1000 times
 (test_recognize_http(num=1000)) on Amazon Elastic Compute Cloud and the result is as follows:
 
+```
 Fail:  233
-
 Right weak:  78
-
 Right strong:  412
-
 Right total:  490
-
 Wrong weak:  260
-
 Wrong strong:  17
-
 Wrong total:  277
-
 Total success rate:  0.49
-
 Success rate when confident:  0.6388526727509778
-
 Success rate when strongly confident:  0.9603729603729604
-
 Success rate when weakly confident:  0.23076923076923078
-
 Time used to test recognize http is:  350.77492213249207
+```
 
 According to the result, we can see that the total success rate is 49%, which means that 490 out of 1000 CAPTCHAs are
 recognized successfully. However, we also notice that when the model is strongly confident of the result, which means the
