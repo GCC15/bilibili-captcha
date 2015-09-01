@@ -29,7 +29,7 @@ This module is designed to represent the source of the CAPTCHA. An abstract base
 defined to represent abstract CAPTCHA providers and a derived class `BilibiliCaptchaProvider` is defined to 
 represent the specific CAPTCHA source we are attempting to recognize. If you want to define other CAPTCHA 
 sources, you can define another class that inherits the abstract base class. Two methods thar must be
-overridden are `_get_data_from_seq` and `_is_correct_response`. They represent getting the necessarydata that needs to be submitted as part of the request to verify and checking whether the recognized sequence is true, respectively.
+overridden are `_get_data_from_seq` and `_is_correct_response`. They represent getting the necessary data that needs to be submitted as part of the request to verify and checking whether the recognized sequence is true, respectively.
 
 `captcha_recognizer.py`
 
@@ -59,7 +59,9 @@ This module is designed to use a multilayer perceptron (MLP) model to learn to r
 The input layer consists of 300 neurons, which is the result of flattening the standard 20 by 15 CAPTCHA character image.
 There is only one hidden layer, and it consists of 200 hidden neurons.
 The output layer consists of 26 neurons, each corresponding to one possible outcome (`EFGH JKLMN PQR TUVWXY  123456 89`).
-The activation function used is `tanh`.
+The activation function of hidden units is `tanh`.
+The activation function of output units is `softmax function`.
+The model is trained by using stochastic gradient descent with minibatches.
 There is already a model with tuned parameters, and it is saved in `best_model.pkl`.
 If you want to reconstruct the model, call `reconstruct_model` method.
 If you want to make prediction, call `predict` method.
