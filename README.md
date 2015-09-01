@@ -29,31 +29,29 @@ This module is designed to represent the source of the CAPTCHA. An abstract base
 defined to represent abstract CAPTCHA providers and a derived class `BilibiliCaptchaProvider` is defined to 
 represent the specific CAPTCHA source we are attempting to recognize. If you want to define other CAPTCHA 
 sources, you can define another class that inherits the abstract base class. Two methods thar must be
-overridden are `_get_data_from_seq` and `_is_correct_response`. They represent getting the data that needs to be
-submitted as part of the request to verify and checking whether the recognized sequence is true, respectively.
+overridden are `_get_data_from_seq` and `_is_correct_response`. They represent getting the necessarydata that needs to be submitted as part of the request to verify and checking whether the recognized sequence is true, respectively.
 
 `captcha_recognizer.py`
 
-This module is designed to recognize the images (the return of imread function in matplotlib.image) from a 
-particular CAPTCHA source (derived class of `HttpCaptchaProvider`). The steps to recognize an image are
+This module is designed to recognize the images (the return value of `imread` function in `matplotlib.image`) from a particular CAPTCHA source (derived class of `HttpCaptchaProvider`). The steps to recognize an image are
 
 1. Noise reduction
 
-  1.1 Noise reduction by hsv
+  1.1 Noise reduction by hsv (`remove_noise_with_hsv` function)
 
-  1.2 Noise reduction by neighbors
+  1.2 Noise reduction by neighbors (`remove_noise_with_neighbors` function)
 
   After this step the remaining image is a greyscale image with slight noise.
 
 2. Segmentation
 
-  Components are found using the next-nearest-neighbor.
+  Components are found using the next-nearest-neighbor. (`segment_with_label` and other commands)
 
   After this step the image is partitioned into a number of "characters".
 
 3. Recognition
 
-  If the partitioned characters is as desired, each is recognized using the model in `captcha_learn.py`.
+  If the number of partitioned characters is as desired, each is recognized using the model in `captcha_learn.py`. (`recognize` function)
 
 `captcha_learn.py`
 
@@ -70,7 +68,7 @@ If you want to make prediction, call `predict` method.
 
 Let's take a look at a few examples.
 
-Suppose we want to recognize a bilibili CAPTCHA image called img (the return of `imread` in `matplotlib.image`), we can
+Suppose we want to recognize a bilibili CAPTCHA image called `img` (the return value of `imread` in `matplotlib.image`), we can
 
 ```python
 import time
