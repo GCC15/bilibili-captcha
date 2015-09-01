@@ -22,11 +22,11 @@ Clone all the files and put them under the same directory as your program, inclu
 
 ## Key Files Overview
 
-`captcha_provider.py`
+**`captcha_provider.py`**
 
 This module represents the source of the CAPTCHA. An abstract base class `HttpCaptchaProvider` is defined to represent abstract CAPTCHA providers and a derived class `BilibiliCaptchaProvider` is defined to represent the specific CAPTCHA source one is attempting to recognize. If you want to define another CAPTCHA source, you can define another class that inherits the abstract base class. Two methods that must be overridden are `_get_data_from_seq` and `_is_correct_response`. `_get_data_from_seq` extracts the necessary data that need to be submitted as part of the request to verify. `_is_correct_response` checks whether the recognized character sequence is correct.
 
-`captcha_recognizer.py`
+**`captcha_recognizer.py`**
 
 This module is designed to recognize the images (the return value of `imread` function in `matplotlib.image`) from a particular CAPTCHA source (derived class of `HttpCaptchaProvider`). The steps to recognize an image are
 
@@ -48,7 +48,7 @@ This module is designed to recognize the images (the return value of `imread` fu
 
   If the number of partitioned characters is as desired, each is recognized using the model in `captcha_learn.py`. (`recognize` function)
 
-`captcha_learn.py`
+**`captcha_learn.py`**
 
 This module is designed to use a multilayer perceptron (MLP) model to learn to recognize individual CAPTCHA character.
 The input layer consists of 300 neurons, which is the result of flattening the standard 20 by 15 CAPTCHA character image.
